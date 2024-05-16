@@ -59,11 +59,12 @@ export function tokenize (sourceCode: string): Token[]{
     if (src[0] != '['){
       tString += src.shift(); // Accumalate template string Token value if not [
     } else {
-      // Tokenise accumalated template string
+      // push accumalated template string
       if (tString.length > 0) {
         tokens.push(token(tString, TokenType.TemplateString));
         tString = ""; // Initialise tString
       }
+      // push beginning of code block
       tokens.push(token(src.shift(), TokenType.OpenBracket));
       bracketCount++;
       // Loop until end of first code block
@@ -76,6 +77,14 @@ export function tokenize (sourceCode: string): Token[]{
           bracketCount--;
         } else if (src[0] == '('){
           tokens.push(token(src.shift(), TokenType.OpenParen));
+        } else if (src[0] == '"'){
+          let string = "";
+          src.shift();
+          while(src[0]!= '"'){
+            string += src.shift();
+          }
+          src.shift();
+          tokens.push(token(string, TokenType.String));
         } else if (src[0] == ')'){
           tokens.push(token(src.shift(), TokenType.CloseParen));
         } else if (src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%") {
@@ -108,10 +117,6 @@ export function tokenize (sourceCode: string): Token[]{
                 console.log('Unrecognised character found in source code');
                 Deno.exit(1);
             }
-            /* TO DO:
-                Add error handler
-                !!! Add string // Gonna have to change a lot for syntaxes with text blocks in them.
-            */
         }
         }
     }

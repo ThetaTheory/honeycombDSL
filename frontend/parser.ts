@@ -1,4 +1,4 @@
-import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral } from "./ast.ts";
+import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -171,12 +171,14 @@ export default class Parser {
     private parse_primary_expr (): Expr {
         const tkn = this.at().type;
         switch(tkn) {
-            case TokenType.Identifier:
-                return { kind: "Identifier", symbol: this.eat().value} as Identifier;
-            case TokenType.Number:
-                return { kind: "NumericLiteral", value: parseFloat(this.eat().value)} as NumericLiteral;
             case TokenType.TemplateString:
                 return { kind: "TemplateLiteral", value: this.eat().value} as TemplateLiteral;
+            case TokenType.Identifier:
+                return { kind: "Identifier", symbol: this.eat().value} as Identifier;
+            case TokenType.String:
+                return { kind: "StringLiteral", value: this.eat().value} as StringLiteral;
+            case TokenType.Number:
+                return { kind: "NumericLiteral", value: parseFloat(this.eat().value)} as NumericLiteral;
             case TokenType.OpenParen: { 
                 this.eat();
                 const value = this.parse_expr();

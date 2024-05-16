@@ -29,14 +29,14 @@ function repl (){
 
 /* To Do:
 . add error catch for if var doesn't exist in ${var}
-. parser for string literal
-. ignore single \n in template literal
+. string concactenation
+. ignore single line break in template literal, add command for linebreak
 . if, loop
 . input
 . choice-branch system
 . file input-output system
 . class-object
-. formats
+. text formats (bold, italics etc)
 */
 
 /* Currently
@@ -45,5 +45,5 @@ function repl (){
 . global constant variables: true, false, null
 . have removed const command, but constant bool remains for declaring default variables when env is run
 . template literal fully functional outside of codeblock
-. backend for string literal done
+. string values fully functional
 */

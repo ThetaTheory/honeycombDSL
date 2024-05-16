@@ -50,10 +50,8 @@ export function eval_template_literal (tstr: TemplateLiteral, env: Environment):
     const result = tstr.value.replace(/\${(.*?)}/g, (_, idn) => {
         // idn is string inside ${}.
         // If idn matches an identifier symbol, return its value as string.
-
         const idnVal = eval_identifier({kind: "Identifier", symbol: idn }, env);
         return String(idnVal.value);
-
     });
     return { value: result, type: "string" };
 }
