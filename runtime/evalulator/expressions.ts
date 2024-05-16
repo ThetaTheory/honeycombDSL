@@ -1,9 +1,9 @@
-import { AssignmentExpr, BinaryExpr, Identifier } from "../../frontend/ast.ts";
+import { AssignmentExpr, BinaryExpr, Identifier, TemplateLiteral } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
-import { NumberVal, RuntimeVal, make_null_var } from "../values.ts";
+import { NumberVal, RuntimeVal, StringVal, make_null_var } from "../values.ts";
 
-// does binary operation and returns result as node.
+// does numeric binary operation and returns result as node.
 function eval_numeric_binary_expr (ls: NumberVal, rs: NumberVal, operator: string): NumberVal {
     let result: number;
     if (operator == '+'){
@@ -16,7 +16,7 @@ function eval_numeric_binary_expr (ls: NumberVal, rs: NumberVal, operator: strin
         result = ls.value / rs.value;
     } else {
         result = ls.value % rs.value;
-    } // ** implement divde by zero catch later.
+    } // To Do: !!!! implement divde by zero error catch.
     return { value: result, type: "number" };
 }
 
@@ -26,7 +26,7 @@ export function eval_binary_expr (binop: BinaryExpr, env: Environment): RuntimeV
     const rightSide = evaluate(binop.right, env);
     if (leftSide.type == "number" && rightSide.type == "number"){
         return eval_numeric_binary_expr(leftSide as NumberVal, rightSide as NumberVal, binop.operator);
-    } else { return make_null_var(); } // ** add string cases later.
+    } else { return make_null_var(); } // To Do: !!! add string cases.
 }
 
 // Look up variable with identifier name in relevant enviornments
@@ -43,4 +43,17 @@ export function eval_assignment_expr (node: AssignmentExpr, env: Environment): R
     // const varname = (node.assignee as Identifier).symbol;
     const varname = node.assignee;
     return env.assignVar(varname, evaluate(node.value, env));
+}
+
+// template literal
+export function eval_template_literal (tstr: TemplateLiteral, env: Environment): StringVal{
+    const result = tstr.value.replace(/\${(.*?)}/g, (_, idn) => {
+        // idn is string inside ${}.
+        // If idn matches an identifier symbol, return its value as string.
+
+        const idnVal = eval_identifier({kind: "Identifier", symbol: idn }, env);
+        return String(idnVal.value);
+
+    });
+    return { value: result, type: "string" };
 }

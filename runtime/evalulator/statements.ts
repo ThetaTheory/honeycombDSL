@@ -3,7 +3,7 @@ import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
 import { RuntimeVal, make_null_var } from "../values.ts";
 
-// evaluates through program until last evaluated element.
+// evaluates through program until last evaluated element inside program.
 export function eval_program (program: Program, env: Environment): RuntimeVal {
     let lastEvaluated: RuntimeVal = make_null_var();
     
@@ -20,7 +20,7 @@ export function eval_var_declaration(declaration: VarDeclaration, env: Environme
     return env.declareVar(declaration.identifier, value, declaration.constant);
 }
 
-// evaluates code block until ???
+// evaluates code block until last evaluated element inside codeblock.
 export function eval_codeblock (codeblock: CodeBlock, env: Environment): RuntimeVal {
     let lastEvaluated: RuntimeVal = make_null_var();
     

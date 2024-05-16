@@ -7,10 +7,11 @@ export type NodeType =
 | "VarDeclaration"
 // Expressions
 | "AssignmentExpr"
-| "NumericLiteral" 
-| "Identifier" 
 | "BinaryExpr"
-// | "StringLiteral" ?
+| "Identifier" 
+| "TemplateLiteral"
+| "StringLiteral"
+| "NumericLiteral" 
 
 /* Interfaces to define the structure of the AST */
 
@@ -49,7 +50,7 @@ export interface AssignmentExpr extends Expr {
     kind: "AssignmentExpr";
     assignee: string; // To Do: Change to expr to accept obj.
     value: Expr;
-} // remove
+}
 
 export interface BinaryExpr extends Expr {
     kind: "BinaryExpr";
@@ -63,12 +64,17 @@ export interface Identifier extends Expr {
     symbol: string;
 }
 
+export interface TemplateLiteral extends Expr {
+    kind: "TemplateLiteral";
+    value: string;
+}
+
+export interface StringLiteral extends Expr {
+    kind: "StringLiteral";
+    value: string;
+}
+
 export interface NumericLiteral extends Expr {
     kind: "NumericLiteral";
     value: number;
 }
-
-// export interface StringLiteral extends Expr {
-//     kind: "StringLiteral";
-//     value: string;
-// }

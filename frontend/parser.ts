@@ -1,4 +1,4 @@
-import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr } from "./ast.ts";
+import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -46,10 +46,8 @@ export default class Parser {
         switch (this.at().type){
             case TokenType.OpenBracket:
                 return this.parse_block_stmt(); // If [, goto code block parser
-            // TO DO: Add commands
             default:
-                return this.parse_expr(); // temp
-                // return this.parse_string();
+                return this.parse_primary_expr(); // If not [, it's always template literal
         }
     }
 
@@ -59,32 +57,30 @@ export default class Parser {
         const codeBlock: CodeBlock = {
             kind: "CodeBlock",
             body: [],
-        } // Creates codeBlock of type CodeBlock
+        }
+        // Parses until encounter ]
         while(this.not_eof() && this.at().type != TokenType.CloseBracket){            
             switch (this.at().type) {
                 case TokenType.Create:
-                    codeBlock.body.push(this.parse_var_declaration());
-                    break;
+                    return this.parse_var_declaration();
                 case TokenType.Set:
-                    codeBlock.body.push(this.parse_assignment_expr());
-                    break;
+                    return this.parse_assignment_expr();
                 // case TokenType.Input:
-                //     codeBlock.body.push(this.parse_assignment_expr());
-                //     break;
+                //     return this.parse_primary_expr();
                 // case TokenType.If:
-                //     codeBlock.body.push(this.parse_assignment_expr());
+                //     codeBlock.body.push(this.parse_if_stmt());
                 //     break;
                 // case TokenType.Loop:
-                //     codeBlock.body.push(this.parse_assignment_expr());
+                //     codeBlock.body.push(this.parse_loop_stmt());
                 //     break;
                 default:
-                    return this.parse_stmt(); // To Do: if it was a string it would eat [. Need to fix.
+                    return this.parse_stmt(); // !!! To Do: if it was a string it would eat [. Add escape \ command.
             }
-        } // While not encounter ], parse contents.
+        }
         this.expect(TokenType.CloseBracket, "Expected ']' to end code block.");
         return codeBlock; // return { kind: "CodeBlock", body: [ -- array of tokens in code block -- ]}
     }
-    // To Do: Maybe we can just code block nestables.
+    // !!!! To Do: Only code block nestables.
 
 
     // create idnt // create idnt = expr
@@ -92,9 +88,10 @@ export default class Parser {
     private parse_var_declaration(): Stmt {
         this.expect(TokenType.Create, "Expected Token Type Create."); // eats create
         const identifier = this.expect(TokenType.Identifier, "Expected identifier following 'create:' keyword.").value; // eats idnt
+        let declaration;
         if(this.at().type == TokenType.CloseBracket){
             // case; create: idnt]
-            return {
+            declaration =  {
                 kind: "VarDeclaration",
                 constant: false,
                 identifier
@@ -102,13 +99,15 @@ export default class Parser {
         } else {
             // case; create: idnt = expr
             this.expect(TokenType.Equals, "Expected '=' or ']' following identifier.") // eats =
-            return {
+            declaration = {
                 kind: "VarDeclaration",
                 constant: false,
                 identifier,
-                value: this.parse_expr(),
+                value: this.parse_additive_expr(),
             } as VarDeclaration;
         }
+        this.expect(TokenType.CloseBracket, "Expected ] to end statement.");
+        return declaration;
     }
     // To Do: look into removing constant while true, false, null remains constant variables..
 
@@ -118,22 +117,24 @@ export default class Parser {
     Member <- FunctionCall <- Logical <- Comparison <- AdditiveExpr <- MultiplicitaveExpr <- UnaryExpr <- PrimaryExpr
    */
 
+    private parse_expr (): Expr {
+        return this.parse_assignment_expr();
+    } // To Do: assignment expression being under parse expr doesn't make sense for my code... Review after implementing obj.
+
     // set var = val]
     private parse_assignment_expr(): Expr {
         this.expect(TokenType.Set, "Expected Token Type Set."); // eats set
-        const left = this.expect(TokenType.Identifier, "Expected identifier following 'create' keyword.").value; // To Do: Make compatible with obj. // eats var
+        const left = this.expect(TokenType.Identifier, "Expected identifier following 'set' keyword.").value; // To Do: Make compatible with obj. // eats var
         this.expect(TokenType.Equals, "Expected '=' after identifier."); // eats =
-        const value = this.parse_expr();
-        return {
+        const value = this.parse_additive_expr();
+        const assignment = {
             kind: "AssignmentExpr",
             assignee: left,
             value
         } as AssignmentExpr;
+        this.expect(TokenType.CloseBracket, "Expected ] to end assignment.");
+        return assignment;
       }
-
-    private parse_expr (): Expr {
-        return this.parse_additive_expr();
-    }
     
     // + -
     private parse_additive_expr (): Expr {
@@ -174,6 +175,8 @@ export default class Parser {
                 return { kind: "Identifier", symbol: this.eat().value} as Identifier;
             case TokenType.Number:
                 return { kind: "NumericLiteral", value: parseFloat(this.eat().value)} as NumericLiteral;
+            case TokenType.TemplateString:
+                return { kind: "TemplateLiteral", value: this.eat().value} as TemplateLiteral;
             case TokenType.OpenParen: { 
                 this.eat();
                 const value = this.parse_expr();
@@ -189,21 +192,3 @@ export default class Parser {
         }
     }
 }
-
-    // private parse_string(): Expr{
-    //     let text = "";
-
-    //     // Continue parsing tokens until an opening bracket '[' is encountered or the end of file is reached
-    //     while (this.not_eof() && this.at().type !== TokenType.OpenBracket) {
-    //         // Append the token's value to the text
-    //         text += this.eat().value;
-    //     }
-    
-    //     // Construct a StringLiteral node containing the parsed text
-    //     const stringLiteral: StringLiteral = {
-    //         kind: "StringLiteral",
-    //         value: text
-    //     };
-    
-    //     return stringLiteral;
-    // } // actually this might be a lexer level thing...

@@ -1,10 +1,9 @@
-// The Lexer translates code text into an array of Tokens //
-
-// To Do: PROBLEM: We need it to only tokenise if inside a code block.
+/* The Lexer translates code text into an array of Tokens */
 
 // Const group of token types
 export enum TokenType {
     String,
+    TemplateString,
     Create, Set,
     Identifier,
     Number,
@@ -31,8 +30,6 @@ export interface Token {
 function token (value = "", type: TokenType): Token {
     return { value, type };
 }
-
-/* Change Check functions to RegEx or something simpler */
   
 // Checks if alphabet
 function isAlpha (str: string){
@@ -50,65 +47,85 @@ function isSkip (str: string){
 }
   
 // Tokenizer
-export function tokenize (sourceCode: string): Token[] {
-  
-    const tokens: Token[] = [];
-  
-    // Split so each character is an element of the array.
-    const src = sourceCode.split("");
-  
-    // Build each token until end of file.
-    while (src.length > 0){
-      // Single Character Tokens
-      if (src[0] == '['){
-        tokens.push(token(src.shift(), TokenType.OpenBracket));
-      } else if (src[0] == ']'){
-        tokens.push(token(src.shift(), TokenType.CloseBracket));
-      } else if (src[0] == '('){
-        tokens.push(token(src.shift(), TokenType.OpenParen));
-      } else if (src[0] == ')'){
-        tokens.push(token(src.shift(), TokenType.CloseParen));
-      } else if (src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%") {
-        tokens.push(token(src.shift(), TokenType.BinaryOperator));
-      } else if (src[0] == "="){
-        tokens.push(token(src.shift(), TokenType.Equals));
-      } else {
-        // Multi Character Tokens
-        if (isInt(src[0])){
-            let num = "";
-            while (src.length > 0 && isInt(src[0])){
-                num += src.shift(); // appends until complete number
-            }
-            tokens.push(token(num, TokenType.Number));
-        } else if (isAlpha(src[0])){
-            let idn = "";
-            while (src.length > 0 && isAlpha(src[0])){
-                idn += src.shift(); // appends until complete identifier
-            }
-            // Check if reserved keyword
-            const reserved = KEYWORDS[idn];
-            if (typeof reserved != "number"){ // because reserved types is an enum // !! wait, fuck, what if it's part of string... shit.
-                tokens.push(token(idn, TokenType.Identifier)); // not reserved
-            } else {
-                tokens.push(token(idn, reserved)); // is reserved
-            }
-        } else if (isSkip(src[0])){
-            src.shift(); // skips character
-        } else {
-            console.log('Unrecognised character found in source code');
-            Deno.exit(1);
-        } /* TO DO: Add error handler */
+export function tokenize (sourceCode: string): Token[]{
+
+  const tokens: Token[] = [];
+  const src = sourceCode.split('');
+  let tString = "";
+  let bracketCount = 0;
+
+  while(src.length > 0){
+
+    if (src[0] != '['){
+      tString += src.shift(); // Accumalate template string Token value if not [
+    } else {
+      // Tokenise accumalated template string
+      if (tString.length > 0) {
+        tokens.push(token(tString, TokenType.TemplateString));
+        tString = ""; // Initialise tString
       }
+      tokens.push(token(src.shift(), TokenType.OpenBracket));
+      bracketCount++;
+      // Loop until end of first code block
+      while(bracketCount !== 0){
+        if (src[0] == '['){
+          tokens.push(token(src.shift(), TokenType.OpenBracket));
+          bracketCount++;
+        } else if (src[0] == ']'){
+          tokens.push(token(src.shift(), TokenType.CloseBracket));
+          bracketCount--;
+        } else if (src[0] == '('){
+          tokens.push(token(src.shift(), TokenType.OpenParen));
+        } else if (src[0] == ')'){
+          tokens.push(token(src.shift(), TokenType.CloseParen));
+        } else if (src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%") {
+          tokens.push(token(src.shift(), TokenType.BinaryOperator));
+        } else if (src[0] == "="){
+          tokens.push(token(src.shift(), TokenType.Equals));
+        } else {
+            // Multi Character Tokens
+            if (isInt(src[0])){
+              let num = "";
+              while (src.length > 0 && isInt(src[0])){
+                  num += src.shift(); // appends until complete number
+              }
+              tokens.push(token(num, TokenType.Number));
+            } else if (isAlpha(src[0])){
+                let idn = "";
+                while (src.length > 0 && isAlpha(src[0])){
+                  idn += src.shift(); // appends until complete identifier
+                }
+                // Check if reserved keyword
+                const reserved = KEYWORDS[idn];
+                if (typeof reserved != "number"){ // because reserved types is an enum ... is this really most optimal?
+                    tokens.push(token(idn, TokenType.Identifier)); // not reserved
+                } else {
+                    tokens.push(token(idn, reserved)); // is reserved
+                }
+            } else if (isSkip(src[0])){
+                src.shift(); // skips character
+            } else {
+                console.log('Unrecognised character found in source code');
+                Deno.exit(1);
+            }
+            /* TO DO:
+                Add error handler
+                !!! Add string // Gonna have to change a lot for syntaxes with text blocks in them.
+            */
+        }
+        }
     }
-    
-    tokens.push({value: "EndOfFile", type: TokenType.EOF});
-    console.log('Tokens: ', tokens, '\n'); // TEMP TESTER
-    return tokens;
+
+  }
+  // push last template string
+  if (tString.length > 0) {
+    tokens.push(token(tString, TokenType.TemplateString));
+  }
+  // push end of file token
+  tokens.push({value: "EndOfFile", type: TokenType.EOF});
+  // TEMP TESTER
+  console.log('Tokens: ', tokens, '\n');
+
+  return tokens;
+
 }
-
-
-
-/* TO DO:
-Optimise
-String??? How handle stuff that should not skip if string. Like spaces.
-*/
