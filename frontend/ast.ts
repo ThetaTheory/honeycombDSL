@@ -5,6 +5,9 @@ export type NodeType =
 | "Program"
 | "CodeBlock"
 | "VarDeclaration"
+| "IfStatement"
+| "ForLoop"
+| "WhileLoop"
 // Expressions
 | "AssignmentExpr"
 | "BinaryExpr"
@@ -39,6 +42,27 @@ export interface VarDeclaration extends Stmt {
     constant: boolean;
     identifier: string;
     value?: Expr;
+}
+
+// If Statement
+export interface IfStatement extends Stmt {
+    kind: "IfStatement";
+    condition: Expr;
+    consequent: Stmt; // or should be array of statements?? Can have multiple...
+}
+
+// For Loop
+export interface ForLoop extends Stmt {
+    kind: "ForLoop";
+    times: number;
+    body: Stmt;
+}
+
+// While Loop
+export interface WhileLoop extends Stmt {
+    kind: "WhileLoop";
+    condition: Expr;
+    body: Stmt;
 }
 
 /* Expressions */

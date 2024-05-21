@@ -28,18 +28,9 @@ function repl (){
 }
 
 /* To Do:
-. conditional, if, loop
-. input
-. choice-branch system
-. file input-output system
-. class-object
-. text formats (bold, italics etc)
-
-// in git string branch
-. add error catch for if var doesn't exist in ${var}
-. string concactenation
-. ignore single line break in template literal, add command for linebreak
-. TERNERY!!
+. conditional
+. if
+. loop
 */
 
 /* Currently

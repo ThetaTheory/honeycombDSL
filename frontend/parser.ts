@@ -1,4 +1,4 @@
-import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral } from "./ast.ts";
+import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -45,14 +45,14 @@ export default class Parser {
     private parse_stmt (): Stmt {
         switch (this.at().type){
             case TokenType.OpenBracket:
-                return this.parse_block_stmt(); // If [, goto code block parser
+                return this.parse_code_block(); // If [, goto code block parser
             default:
                 return this.parse_primary_expr(); // If not [, it's always template literal
         }
     }
 
 
-    private parse_block_stmt(): Stmt{
+    private parse_code_block(): Stmt{
         this.eat() // eat [
         const codeBlock: CodeBlock = {
             kind: "CodeBlock",
@@ -67,11 +67,11 @@ export default class Parser {
                     return this.parse_assignment_expr();
                 // case TokenType.Input:
                 //     return this.parse_primary_expr();
-                // case TokenType.If:
-                //     codeBlock.body.push(this.parse_if_stmt());
-                //     break;
+                case TokenType.If:
+                    codeBlock.body.push(this.parse_if_stmt());
+                    break;
                 // case TokenType.Loop:
-                //     codeBlock.body.push(this.parse_loop_stmt());
+                //     codeBlock.body.push(this.parse_loop_stmt()); // while, for
                 //     break;
                 default:
                     return this.parse_stmt(); // !!! To Do: if it was a string it would eat [. Add escape \ command.
@@ -111,6 +111,24 @@ export default class Parser {
     }
     // To Do: look into removing constant while true, false, null remains constant variables..
 
+    // if condition: consequent]
+    private parse_if_stmt(): Stmt{
+        this.expect(TokenType.If, "Expected Token Type If."); // eats if
+        let condition: Expr;
+        // parse condition before :
+        while(this.at().type !== TokenType.Colon){
+            condition = this.parse_logical_expr();
+        }
+        this.expect(TokenType.Colon, "Expected : after condition.") // eats :
+        // parse consequent until ]. Any token type can go here.
+        const consequent = this.parse_stmt();
+        // return parsed node
+        return {
+            kind: "IfStatement",
+            condition: condition!,
+            consequent: consequent,
+        } as IfStatement
+    }
 
     /* Expression Parser */
     /* Order of Precedence:
@@ -134,7 +152,37 @@ export default class Parser {
         } as AssignmentExpr;
         this.expect(TokenType.CloseBracket, "Expected ] to end assignment.");
         return assignment;
-      }
+    }
+
+    // logical condition with left-operator-right
+    private parse_logical_expr(): Expr{
+        let left = this.parse_comparative_expr();
+        while(this.at().value == "&" || this.at().value == "|") {
+            const operator = this.eat().value;
+            const right =  this.parse_comparative_expr();
+            left = {
+                kind: "BinaryExpr",
+                left, right, operator,
+            } as BinaryExpr;
+
+        } 
+        return left;
+    }
+
+    // comparitive condition with left-operator-right
+    private parse_comparative_expr(): Expr{
+        let left = this.parse_additive_expr();
+        while(this.at().value == "=" || this.at().value == "!=" || this.at().value == ">" || this.at().value == ">=" || this.at().value == "<" || this.at().value == "<=") {
+            const operator = this.eat().value;
+            const right =  this.parse_additive_expr();
+            left = {
+                kind: "BinaryExpr",
+                left, right, operator,
+            } as BinaryExpr;
+
+        } 
+        return left;
+    }
     
     // + -
     private parse_additive_expr (): Expr {
@@ -166,8 +214,6 @@ export default class Parser {
         return left;
     }
 
-    // To Do: Add boolean binary expr.
-
     private parse_primary_expr (): Expr {
         const tkn = this.at().type;
         switch(tkn) {
@@ -185,9 +231,6 @@ export default class Parser {
                 this.expect(TokenType.CloseParen, "Unexpected token found inside parethesis expression.");
                 return value;
             }
-            //case TokenType.BinaryOperator:
-            //case TokenType.Equals:
-            //case TokenType.EOF:
             default:
                 console.error("Unexpected token found during parsing", this.at());
                 Deno.exit(1);

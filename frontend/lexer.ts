@@ -9,8 +9,10 @@ export enum TokenType {
     Number,
     OpenParen, CloseParen,
     OpenBracket, CloseBracket,
+    Colon,
     BinaryOperator, Equals,
-    // if, loop
+    RelationalOperator, LogicalOperator,
+    If, Loop,
     EOF,
   }
   
@@ -18,6 +20,10 @@ export enum TokenType {
 const KEYWORDS: Record<string, TokenType> = {
     create: TokenType.Create,
     set: TokenType.Set,
+    if: TokenType.If,
+    loop: TokenType.Loop,
+    while: TokenType.Loop,
+    for: TokenType.Loop,
 }
 
 // Rule token objects should follow
@@ -67,7 +73,7 @@ export function tokenize (sourceCode: string): Token[]{
       // push beginning of code block
       tokens.push(token(src.shift(), TokenType.OpenBracket));
       bracketCount++;
-      // Loop until end of first code block
+      // Loop until end of first code block. i.e. The main tokeniser only executes inside square brackets.
       while(bracketCount !== 0){
         if (src[0] == '['){
           tokens.push(token(src.shift(), TokenType.OpenBracket));
@@ -91,6 +97,16 @@ export function tokenize (sourceCode: string): Token[]{
           tokens.push(token(src.shift(), TokenType.BinaryOperator));
         } else if (src[0] == "="){
           tokens.push(token(src.shift(), TokenType.Equals));
+        } else if (src[0] == ">" || src[0] == "<" || (src[0] == "!" && src[1] == "=")){
+          let operator = src.shift()!; // forced ! because TypeScript thinks it may return undefined even though it can't -_-
+          if (src[0] == '=') {
+            operator += src.shift(); // For !=, <=, >=
+          }
+          tokens.push(token(operator, TokenType.RelationalOperator));
+        } else if (src[0] == "&" || src[0] == "|"){
+          tokens.push(token(src.shift(), TokenType.LogicalOperator));
+        } else if (src[0] == ":"){
+          tokens.push(token(src.shift(), TokenType.Colon));
         } else {
             // Multi Character Tokens
             if (isInt(src[0])){
