@@ -42,45 +42,48 @@ export default class Parser {
 
     /* Statement Parser */
 
+    // Directs commands to command parser, template literal to primary expression parser.
     private parse_stmt (): Stmt {
         switch (this.at().type){
             case TokenType.OpenBracket:
-                return this.parse_code_block(); // If [, goto code block parser
+                return this.parse_commands(); // If [, goto command parser
             default:
-                return this.parse_primary_expr(); // If not [, it's always template literal
+                return this.parse_primary_expr(); // If not [, it's always a template literal
         }
     }
 
 
-    private parse_code_block(): Stmt{
+    // Directs commands to relevant parsers.
+    private parse_commands(): Stmt{
         this.eat() // eat [
+        switch (this.at().type) {
+            case TokenType.Create:
+                return this.parse_var_declaration();
+            case TokenType.Set:
+                return this.parse_assignment_expr();
+            // case TokenType.Input:
+            //     return this.parse_primary_expr();
+            case TokenType.If:
+                return this.parse_if_stmt();
+            // case TokenType.Loop:
+            //     codeBlock.body.push(this.parse_loop_stmt()); // while, for
+            //     break;
+            default:
+                return this.parse_stmt(); // !!! To Do: if it was a string it would eat [. Add escape \ command.
+        }
+    }
+
+    private parse_block_stmt(): Stmt{
         const codeBlock: CodeBlock = {
             kind: "CodeBlock",
             body: [],
         }
-        // Parses until encounter ]
-        while(this.not_eof() && this.at().type != TokenType.CloseBracket){            
-            switch (this.at().type) {
-                case TokenType.Create:
-                    return this.parse_var_declaration();
-                case TokenType.Set:
-                    return this.parse_assignment_expr();
-                // case TokenType.Input:
-                //     return this.parse_primary_expr();
-                case TokenType.If:
-                    codeBlock.body.push(this.parse_if_stmt());
-                    break;
-                // case TokenType.Loop:
-                //     codeBlock.body.push(this.parse_loop_stmt()); // while, for
-                //     break;
-                default:
-                    return this.parse_stmt(); // !!! To Do: if it was a string it would eat [. Add escape \ command.
-            }
+        while(this.not_eof() && this.at().type != TokenType.CloseBracket){
+            codeBlock.body.push(this.parse_stmt());
         }
         this.expect(TokenType.CloseBracket, "Expected ']' to end code block.");
-        return codeBlock; // return { kind: "CodeBlock", body: [ -- array of tokens in code block -- ]}
-    }
-    // !!!! To Do: Only code block nestables.
+        return codeBlock;
+    } // might change this to say paragraph block
 
 
     // create idnt // create idnt = expr
@@ -119,16 +122,18 @@ export default class Parser {
         while(this.at().type !== TokenType.Colon){
             condition = this.parse_logical_expr();
         }
+        console.log("Condition is", condition!); //DEBUG
         this.expect(TokenType.Colon, "Expected : after condition.") // eats :
-        // parse consequent until ]. Any token type can go here.
-        const consequent = this.parse_stmt();
+        // parse consequent as block stmt
+        const consequent = this.parse_block_stmt();
+        console.log("Consequent is", consequent); //DEBUG
         // return parsed node
         return {
             kind: "IfStatement",
             condition: condition!,
             consequent: consequent,
         } as IfStatement
-    }
+    } // To Do: Add error catch for null condition
 
     /* Expression Parser */
     /* Order of Precedence:
@@ -136,7 +141,7 @@ export default class Parser {
    */
 
     private parse_expr (): Expr {
-        return this.parse_assignment_expr();
+        return this.parse_logical_expr();
     } // To Do: assignment expression being under parse expr doesn't make sense for my code... Review after implementing obj.
 
     // set var = val]
@@ -157,7 +162,7 @@ export default class Parser {
     // logical condition with left-operator-right
     private parse_logical_expr(): Expr{
         let left = this.parse_comparative_expr();
-        while(this.at().value == "&" || this.at().value == "|") {
+        while(this.at().type == TokenType.LogicalOperator) {
             const operator = this.eat().value;
             const right =  this.parse_comparative_expr();
             left = {
@@ -169,10 +174,10 @@ export default class Parser {
         return left;
     }
 
-    // comparitive condition with left-operator-right
+    // comparative condition with left-operator-right
     private parse_comparative_expr(): Expr{
         let left = this.parse_additive_expr();
-        while(this.at().value == "=" || this.at().value == "!=" || this.at().value == ">" || this.at().value == ">=" || this.at().value == "<" || this.at().value == "<=") {
+        while(this.at().type == TokenType.Equals || this.at().type == TokenType.RelationalOperator) {
             const operator = this.eat().value;
             const right =  this.parse_additive_expr();
             left = {

@@ -1,4 +1,4 @@
-import { CodeBlock, Program, VarDeclaration } from "../../frontend/ast.ts";
+import { CodeBlock, IfStatement, Program, VarDeclaration } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
 import { RuntimeVal, make_null_var } from "../values.ts";
@@ -30,3 +30,20 @@ export function eval_codeblock (codeblock: CodeBlock, env: Environment): Runtime
 
     return lastEvaluated;  
 }
+
+// if statement
+export function eval_if_stmt (ifStmt: IfStatement, env: Environment): RuntimeVal{
+    // send condition to evaluate
+    const condition = evaluate(ifStmt.condition, env);
+    // catch error if condition does not evaluate to boolean
+    if (condition.type !== "boolean") {
+        throw new Error("Condition of if statement must evaluate to a boolean");
+    }
+    // if true, send consequent to evaluate and return result
+    if (condition){
+        return evaluate(ifStmt.consequent, env);
+    } else {
+        return make_null_var();
+    } // if false, return null
+}
+// DEBUG: Oh wait, I forgot consequent is both template and code.....

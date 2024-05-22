@@ -1,7 +1,7 @@
 import { AssignmentExpr, BinaryExpr, Identifier, TemplateLiteral } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
-import { NumberVal, RuntimeVal, StringVal, make_null_var } from "../values.ts";
+import { NumberVal, RuntimeVal, StringVal, BooleanVal, make_null_var } from "../values.ts";
 
 // does numeric binary operation and returns result as node.
 function eval_numeric_binary_expr (ls: NumberVal, rs: NumberVal, operator: string): NumberVal {
@@ -20,13 +20,50 @@ function eval_numeric_binary_expr (ls: NumberVal, rs: NumberVal, operator: strin
     return { value: result, type: "number" };
 }
 
+// does comparative binary operation and returns result as node.
+function eval_comparative_binary_expr (ls: RuntimeVal, rs: RuntimeVal, operator: string): BooleanVal {
+    if (ls.value === undefined || ls.value === null || rs.value === undefined || rs.value === null) {
+        throw new Error("Cannot perform comparison on undefined or null values");
+    }
+    let result: boolean;
+    if (operator == '='){
+        result = ls.value == rs.value;
+    } else if (operator == '!='){
+        result = ls.value !== rs.value;
+    } else if (operator == '>'){
+        result = ls.value > rs.value;
+    } else if (operator == '>='){
+        result = ls.value >= rs.value;
+    } else if (operator == '<'){
+        result = ls.value < rs.value;
+    } else {
+        result = ls.value <= rs.value;
+    }
+    return { value: result, type: "boolean"}
+}
+
+// does logical binary operation and returns result as node.
+function eval_logical_binary_expr (ls: BooleanVal, rs: BooleanVal, operator: string): BooleanVal {
+    let result: boolean;
+    if (operator == '&'){
+        result = ls.value && rs.value;
+    } else {
+        result = ls.value || rs.value;
+    }
+    return { value: result, type: "boolean"}
+}
+
 // checks if binary expression is numbers. send to operate if yes, null if no.
 export function eval_binary_expr (binop: BinaryExpr, env: Environment): RuntimeVal {
     const leftSide = evaluate(binop.left, env);
     const rightSide = evaluate(binop.right, env);
-    if (leftSide.type == "number" && rightSide.type == "number"){
+    if (leftSide.type == "number" && rightSide.type == "number" && (binop.operator == "+" || binop.operator == "-" || binop.operator == "*" || binop.operator == "/" || binop.operator == "%")){
         return eval_numeric_binary_expr(leftSide as NumberVal, rightSide as NumberVal, binop.operator);
-    } else { return make_null_var(); } // To Do: !!! add string cases.
+    } else if(leftSide.type == "boolean" && rightSide.type == "boolean" && (binop.operator == "&" || binop.operator == "|")){
+        return eval_logical_binary_expr(leftSide as BooleanVal, rightSide as BooleanVal, binop.operator);
+    } else if(binop.operator == "=" || binop.operator == "!=" || binop.operator == ">" || binop.operator == ">=" || binop.operator == "<" || binop.operator == "<="){
+        return eval_comparative_binary_expr(leftSide as RuntimeVal, rightSide as RuntimeVal, binop.operator);
+    } else { return make_null_var(); } // To Do: !!! add string concactenation cases.
 }
 
 // Look up variable with identifier name in relevant enviornments

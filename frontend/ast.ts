@@ -48,7 +48,7 @@ export interface VarDeclaration extends Stmt {
 export interface IfStatement extends Stmt {
     kind: "IfStatement";
     condition: Expr;
-    consequent: Stmt; // or should be array of statements?? Can have multiple...
+    consequent: CodeBlock;
 }
 
 // For Loop

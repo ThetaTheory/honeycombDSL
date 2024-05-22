@@ -106,7 +106,7 @@ export function tokenize (sourceCode: string): Token[]{
         } else if (src[0] == "&" || src[0] == "|"){
           tokens.push(token(src.shift(), TokenType.LogicalOperator));
         } else if (src[0] == ":"){
-          tokens.push(token(src.shift(), TokenType.Colon));
+          tokens.push(token(src.shift(), TokenType.Colon)); // Between : and end of code block is always a block statement.
         } else {
             // Multi Character Tokens
             if (isInt(src[0])){
