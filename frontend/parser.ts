@@ -122,11 +122,9 @@ export default class Parser {
         while(this.at().type !== TokenType.Colon){
             condition = this.parse_logical_expr();
         }
-        console.log("Condition is", condition!); //DEBUG
         this.expect(TokenType.Colon, "Expected : after condition.") // eats :
         // parse consequent as block stmt
         const consequent = this.parse_block_stmt();
-        console.log("Consequent is", consequent); //DEBUG
         // return parsed node
         return {
             kind: "IfStatement",
