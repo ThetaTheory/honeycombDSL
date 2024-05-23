@@ -1,7 +1,7 @@
 import { AssignmentExpr, BinaryExpr, Identifier, TemplateLiteral } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
-import { NumberVal, RuntimeVal, StringVal, BooleanVal, make_null_var } from "../values.ts";
+import { NumberVal, RuntimeVal, StringVal, BooleanVal, make_null_var, TextVal } from "../values.ts";
 
 // does numeric binary operation and returns result as node.
 function eval_numeric_binary_expr (ls: NumberVal, rs: NumberVal, operator: string): NumberVal {
@@ -83,12 +83,12 @@ export function eval_assignment_expr (node: AssignmentExpr, env: Environment): R
 }
 
 // template literal
-export function eval_template_literal (tstr: TemplateLiteral, env: Environment): StringVal{
+export function eval_template_literal (tstr: TemplateLiteral, env: Environment): TextVal{
     const result = tstr.value.replace(/\${(.*?)}/g, (_, idn) => {
         // idn is string inside ${}.
         // If idn matches an identifier symbol, return its value as string.
         const idnVal = eval_identifier({kind: "Identifier", symbol: idn }, env);
         return String(idnVal.value);
     });
-    return { value: result, type: "string" };
+    return { value: result, type: "text" };
 }

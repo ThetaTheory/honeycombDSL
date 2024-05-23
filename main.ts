@@ -1,31 +1,31 @@
 import Parser from "./frontend/parser.ts";
-import Environment, { createGlobalEnv } from "./runtime/enviornment.ts";
+import { createGlobalEnv } from "./runtime/enviornment.ts";
 import { evaluate } from "./runtime/interpreter.ts";
 
 // Read-Eval-Print
 //repl();
-function repl (){
+// function repl (){
 
-    const parser = new Parser();
-    const env = createGlobalEnv();
+//     const parser = new Parser();
+//     const env = createGlobalEnv();
 
-    // Input - Parse - Interpret
-    console.log("\n Repl v0.1");
-    while (true){
-        // user input code to parse
-        const input = prompt("> ");
-        if (!input || input.includes("exit")){
-            Deno.exit(1);
-        }
-        // produce AST from input
-        const program = parser.produceAST(input);
-        console.log('AST: ', program, '\n')
+//     // Input - Parse - Interpret
+//     console.log("\n Repl v0.1");
+//     while (true){
+//         // user input code to parse
+//         const input = prompt("> ");
+//         if (!input || input.includes("exit")){
+//             Deno.exit(1);
+//         }
+//         // produce AST from input
+//         const program = parser.produceAST(input);
+//         console.log('AST: ', program, '\n')
 
-        // produce value from AST node
-        const result = evaluate(program, env);
-        console.log('Interpreted: ', result);
-    }
-}
+//         // produce value from AST node
+//         const result = evaluate(program, env);
+//         console.log('Interpreted: ', result);
+//     }
+// }
 
 run("./test.txt");
 

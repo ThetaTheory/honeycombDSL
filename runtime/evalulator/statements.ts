@@ -1,17 +1,19 @@
 import { CodeBlock, ForLoop, IfStatement, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
-import { BooleanVal, RuntimeVal, make_null_var } from "../values.ts";
+import { BooleanVal, OutputVal, RuntimeVal, make_null_var } from "../values.ts";
 
 // evaluates through program until last evaluated element inside program.
-export function eval_program (program: Program, env: Environment): RuntimeVal {
-    let lastEvaluated: RuntimeVal = make_null_var();
-    
+export function eval_program (program: Program, env: Environment): OutputVal {
+    const textOutput: string[] = [];    
     for (const statement of program.body){
-        lastEvaluated = evaluate(statement, env);
+        const evalResult = evaluate(statement, env);
+        if (evalResult.type == "text"){
+            textOutput.push(evalResult.value as string);
+        }
     }
 
-    return lastEvaluated;
+    return { value: textOutput, type: "textArray"};
 }
 
 // evaluates variable declaration. if no value, assign null value.

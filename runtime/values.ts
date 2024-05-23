@@ -1,7 +1,7 @@
-export type ValueType = "null" | "number" | "boolean" | "string";
+export type ValueType = "null" | "number" | "boolean" | "string" | "text" | "textArray";
 
 export interface RuntimeVal {
-    value?: null | number | boolean | string;
+    value?: null | number | boolean | string | string[];
     type: ValueType;
 }
 
@@ -23,6 +23,16 @@ export interface BooleanVal extends RuntimeVal {
 export interface StringVal extends RuntimeVal {
     value: string;
     type: "string";
+}
+
+export interface TextVal extends RuntimeVal {
+    value: string;
+    type: "text";
+}
+
+export interface OutputVal extends RuntimeVal {
+    value: string[];
+    type: "textArray";
 }
 
 // Make Variable functions to simplify code
