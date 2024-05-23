@@ -1,4 +1,4 @@
-import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement } from "./ast.ts";
+import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement, ForLoop, WhileLoop } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -23,7 +23,7 @@ export default class Parser {
         if (!prev || prev.type != type){
             console.error("Parser Error:\n", err, prev, " - Expecting: ", type);
             Deno.exit(1);
-        }
+        } // To Do: Maybe change to throw?
         return prev;
     }
 
@@ -53,7 +53,7 @@ export default class Parser {
     }
 
 
-    // Directs commands to relevant parsers.
+    // Directs commands (that start with [) to relevant parsers.
     private parse_commands(): Stmt{
         this.eat() // eat [
         switch (this.at().type) {
@@ -65,14 +65,14 @@ export default class Parser {
             //     return this.parse_primary_expr();
             case TokenType.If:
                 return this.parse_if_stmt();
-            // case TokenType.Loop:
-            //     codeBlock.body.push(this.parse_loop_stmt()); // while, for
-            //     break;
+            case TokenType.Loop:
+                return this.parse_loop_stmt();
             default:
                 return this.parse_stmt(); // !!! To Do: if it was a string it would eat [. Add escape \ command.
         }
     }
 
+    // parses statements until ].
     private parse_block_stmt(): Stmt{
         const codeBlock: CodeBlock = {
             kind: "CodeBlock",
@@ -86,8 +86,7 @@ export default class Parser {
     } // might change this to say paragraph block
 
 
-    // create idnt // create idnt = expr
-    // return to parse code block
+    // [create idnt] // [create idnt = expr]
     private parse_var_declaration(): Stmt {
         this.expect(TokenType.Create, "Expected Token Type Create."); // eats create
         const identifier = this.expect(TokenType.Identifier, "Expected identifier following 'create:' keyword.").value; // eats idnt
@@ -100,7 +99,7 @@ export default class Parser {
                 identifier
             } as VarDeclaration;
         } else {
-            // case; create: idnt = expr
+            // case; create: idnt = expr]
             this.expect(TokenType.Equals, "Expected '=' or ']' following identifier.") // eats =
             declaration = {
                 kind: "VarDeclaration",
@@ -132,6 +131,40 @@ export default class Parser {
             consequent: consequent,
         } as IfStatement
     } // To Do: Add error catch for null condition
+
+    // [loop for/while int/condition: repeat block]
+    private parse_loop_stmt(): Stmt{
+        this.expect(TokenType.Loop, "Expected 'loop' command."); // eats loop
+
+        if (this.at().type == TokenType.ForLoop){
+            this.expect(TokenType.ForLoop, "Expected 'for' command."); // eats for
+            const number = Number(this.expect(TokenType.Number, "Expected integer to follow 'for' command.").value);
+            this.expect(TokenType.Colon, "Expected ':'."); // eats :
+            const body = this.parse_block_stmt();
+            return {
+                kind: "ForLoop",
+                times: number,
+                body: body,
+            } as ForLoop
+        } else if (this.at().type == TokenType.WhileLoop){
+            this.expect(TokenType.WhileLoop, "Expected 'while' command."); // eats while
+            let condition: Expr;
+            // parse condition before :
+            while(this.at().type !== TokenType.Colon){
+                condition = this.parse_logical_expr();
+            }
+            this.expect(TokenType.Colon, "Expected : after condition.") // eats :
+            const body = this.parse_block_stmt();
+            return {
+                kind: "WhileLoop",
+                condition: condition!,
+                body: body,
+            } as WhileLoop // To Do: Add error catch for null condition
+        } else {
+            throw new Error("Expected 'for' or 'while' command to follow 'loop'.");
+        }
+
+    }
 
     /* Expression Parser */
     /* Order of Precedence:

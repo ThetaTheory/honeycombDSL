@@ -1,7 +1,7 @@
-import { CodeBlock, IfStatement, Program, VarDeclaration } from "../../frontend/ast.ts";
+import { CodeBlock, ForLoop, IfStatement, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
-import { RuntimeVal, make_null_var } from "../values.ts";
+import { BooleanVal, RuntimeVal, make_null_var } from "../values.ts";
 
 // evaluates through program until last evaluated element inside program.
 export function eval_program (program: Program, env: Environment): RuntimeVal {
@@ -46,4 +46,44 @@ export function eval_if_stmt (ifStmt: IfStatement, env: Environment): RuntimeVal
         return make_null_var();
     } // if false, return null
 }
-// DEBUG: Oh wait, I forgot consequent is both template and code.....
+
+// for statement
+export function eval_for_stmt (forStmt: ForLoop, env: Environment): RuntimeVal{
+    let lastEvaluated: RuntimeVal = make_null_var();
+    let times = forStmt.times;
+
+    // error handler for invalid times.
+    if (typeof times !== 'number' || times < 0) {
+        throw new Error(`Invalid number of iterations: ${times}`);
+    }
+
+    // repeat body for times times.
+    for (let i = 0; i < times; i++) {
+        lastEvaluated = eval_codeblock(forStmt.body, env);
+    }
+
+    return lastEvaluated;
+}
+
+// while statement
+export function eval_while_stmt (whileStmt: WhileLoop, env: Environment): RuntimeVal{
+    let lastEvaluated: RuntimeVal = make_null_var();
+    // evaluate condition
+    let condition = evaluate(whileStmt.condition, env);
+    // error handler for invalid condition.
+    if (condition.type !== "boolean") {
+        throw new Error(`Expected boolean condition, but got ${condition.type}`);
+    }
+
+    // repeat body while condition is true.
+    while ((condition as BooleanVal).value) {
+        lastEvaluated = eval_codeblock(whileStmt.body, env);
+        condition = evaluate(whileStmt.condition, env);
+
+        if (condition.type !== "boolean") {
+            throw new Error(`Expected boolean condition, but got ${condition.type}`);
+        }
+    }
+
+    return lastEvaluated;
+}

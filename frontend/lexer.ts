@@ -12,7 +12,7 @@ export enum TokenType {
   Colon,
   BinaryOperator, Equals,
   RelationalOperator, LogicalOperator,
-  If, Loop,
+  If, Loop, ForLoop, WhileLoop,
   EOF,
 }
 
@@ -22,8 +22,8 @@ const KEYWORDS: Record<string, TokenType> = {
   set: TokenType.Set,
   if: TokenType.If,
   loop: TokenType.Loop,
-  while: TokenType.Loop,
-  for: TokenType.Loop,
+  while: TokenType.WhileLoop,
+  for: TokenType.ForLoop,
 }
 
 // Rule token objects should follow

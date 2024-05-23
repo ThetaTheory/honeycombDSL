@@ -28,9 +28,6 @@ function repl (){
 }
 
 /* To Do:
-. fix lexer to parse between : and ] as temp lit unless encounter nested command.
-. if interpreter
-. loop parser, interpreter
 */
 
 /* Currently
@@ -38,9 +35,10 @@ function repl (){
 . assign, read, reassign variable fully functional
 . global constant variables: true, false, null
 . have removed const command, but constant bool remains for declaring default variables when env is run
-. template literal fully functional outside of codeblock
+. template literal fully functional both outside and inside of codeblock
 . string values fully functional
-. conditional lexer, parser, interpreter
+. conditional expression fully functional
 . block statement parser (works Inside commands)
-. if statement parser
+. if statement fully functional
+. for/while loop parser
 */

@@ -55,14 +55,14 @@ export interface IfStatement extends Stmt {
 export interface ForLoop extends Stmt {
     kind: "ForLoop";
     times: number;
-    body: Stmt;
+    body: CodeBlock;
 }
 
 // While Loop
 export interface WhileLoop extends Stmt {
     kind: "WhileLoop";
     condition: Expr;
-    body: Stmt;
+    body: CodeBlock;
 }
 
 /* Expressions */
