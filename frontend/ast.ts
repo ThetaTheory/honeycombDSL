@@ -8,6 +8,7 @@ export type NodeType =
 | "IfStatement"
 | "ForLoop"
 | "WhileLoop"
+| "InputCommand"
 // Expressions
 | "AssignmentExpr"
 | "BinaryExpr"
@@ -63,6 +64,12 @@ export interface WhileLoop extends Stmt {
     kind: "WhileLoop";
     condition: Expr;
     body: CodeBlock;
+}
+
+// Input
+export interface InputCommand extends Stmt {
+    kind: "InputCommand";
+    identifier: string;
 }
 
 /* Expressions */

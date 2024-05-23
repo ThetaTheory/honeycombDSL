@@ -42,10 +42,10 @@ async function run(filename:string) {
 }
 
 /* To Do (on this branch):
-. have temp lit print on html page
 */
 
 /* To Do:
+. have temp lit print on html page
 . choice-option
 . format
 . scene
@@ -66,4 +66,5 @@ async function run(filename:string) {
 . block statement parser (works Inside commands)
 . if statement fully functional
 . loop for/while statement fully functional
+. input command fully functional
 */

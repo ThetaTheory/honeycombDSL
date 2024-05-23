@@ -1,4 +1,4 @@
-import { CodeBlock, ForLoop, IfStatement, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
+import { CodeBlock, ForLoop, IfStatement, InputCommand, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
 import { BooleanVal, OutputVal, RuntimeVal, make_null_var } from "../values.ts";
@@ -7,9 +7,13 @@ import { BooleanVal, OutputVal, RuntimeVal, make_null_var } from "../values.ts";
 export function eval_program (program: Program, env: Environment): OutputVal {
     const textOutput: string[] = [];    
     for (const statement of program.body){
-        const evalResult = evaluate(statement, env);
-        if (evalResult.type == "text"){
+        if (statement.kind == "InputCommand") {
+            eval_input_command(statement as InputCommand, env);
+        } else {
+            const evalResult = evaluate(statement, env);
+            if (evalResult.type == "text"){
             textOutput.push(evalResult.value as string);
+            }
         }
     }
 
@@ -31,6 +35,18 @@ export function eval_codeblock (codeblock: CodeBlock, env: Environment): Runtime
     }
 
     return lastEvaluated;  
+}
+
+// input
+export function eval_input_command(inputCmd: InputCommand, env: Environment): void {
+    const userInput = prompt("Enter:");
+    if (userInput !== null) {
+        // assign user input as value to variable
+        env.assignVar(inputCmd.identifier, { value: userInput, type: "string" });
+    } else {
+        // Handle case where user cancels input
+        console.log("Input cancelled.");
+    }
 }
 
 // if statement

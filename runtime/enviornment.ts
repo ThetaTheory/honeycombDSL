@@ -16,7 +16,7 @@ export default class Environment {
 
     private parent?: Environment; // parent(may be undefined)
     private variables: Map<string, RuntimeVal>;
-    private constants: Set<string>; // To Do: wait I thought we removed this -_-
+    private constants: Set<string>;
 
     constructor (parentENV?: Environment){
         // const global = parentENV? true : false;

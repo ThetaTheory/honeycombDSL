@@ -13,6 +13,7 @@ export enum TokenType {
   BinaryOperator, Equals,
   RelationalOperator, LogicalOperator,
   If, Loop, ForLoop, WhileLoop,
+  Input,
   EOF,
 }
 
@@ -24,6 +25,7 @@ const KEYWORDS: Record<string, TokenType> = {
   loop: TokenType.Loop,
   while: TokenType.WhileLoop,
   for: TokenType.ForLoop,
+  input: TokenType.Input,
 }
 
 // Rule token objects should follow
@@ -61,7 +63,7 @@ const tokens = recursive_tokenizer(src);
 // push end of file token
 tokens.push({value: "EndOfFile", type: TokenType.EOF});
 // DEBUG: TESTER
-// console.log('Tokens: ', tokens, '\n');
+//console.log('Tokens: ', tokens, '\n');
 
 return tokens;
 

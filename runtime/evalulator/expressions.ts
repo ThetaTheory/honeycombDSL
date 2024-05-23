@@ -1,7 +1,7 @@
 import { AssignmentExpr, BinaryExpr, Identifier, TemplateLiteral } from "../../frontend/ast.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
-import { NumberVal, RuntimeVal, StringVal, BooleanVal, make_null_var, TextVal } from "../values.ts";
+import { NumberVal, RuntimeVal, BooleanVal, make_null_var, TextVal } from "../values.ts";
 
 // does numeric binary operation and returns result as node.
 function eval_numeric_binary_expr (ls: NumberVal, rs: NumberVal, operator: string): NumberVal {

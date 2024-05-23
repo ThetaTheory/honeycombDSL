@@ -1,4 +1,4 @@
-import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement, ForLoop, WhileLoop } from "./ast.ts";
+import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement, ForLoop, WhileLoop, InputCommand } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -61,8 +61,8 @@ export default class Parser {
                 return this.parse_var_declaration();
             case TokenType.Set:
                 return this.parse_assignment_expr();
-            // case TokenType.Input:
-            //     return this.parse_primary_expr();
+            case TokenType.Input:
+                return this.parse_input_stmt();
             case TokenType.If:
                 return this.parse_if_stmt();
             case TokenType.Loop:
@@ -112,6 +112,17 @@ export default class Parser {
         return declaration;
     }
     // To Do: look into removing constant while true, false, null remains constant variables..
+
+    // [input idnt]
+    private parse_input_stmt(): Stmt{
+        this.expect(TokenType.Input, "Expected 'input' command."); // eats input
+        const varName = this.expect(TokenType.Identifier, "Expected identifier.").value;
+        this.expect(TokenType.CloseBracket, "Expected ] to end statement."); // eats ]
+        return {
+            kind: "InputCommand",
+            identifier: varName,
+        } as InputCommand
+    }
 
     // if condition: consequent]
     private parse_if_stmt(): Stmt{
