@@ -54,7 +54,7 @@ export interface IfStatement extends Stmt {
 // For Loop
 export interface ForLoop extends Stmt {
     kind: "ForLoop";
-    times: number;
+    times: Expr;
     body: CodeBlock;
 }
 

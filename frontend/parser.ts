@@ -138,7 +138,7 @@ export default class Parser {
 
         if (this.at().type == TokenType.ForLoop){
             this.expect(TokenType.ForLoop, "Expected 'for' command."); // eats for
-            const number = Number(this.expect(TokenType.Number, "Expected integer to follow 'for' command.").value);
+            const number = this.parse_expr();
             this.expect(TokenType.Colon, "Expected ':'."); // eats :
             const body = this.parse_block_stmt();
             return {
@@ -151,7 +151,7 @@ export default class Parser {
             let condition: Expr;
             // parse condition before :
             while(this.at().type !== TokenType.Colon){
-                condition = this.parse_logical_expr();
+                condition = this.parse_expr();
             }
             this.expect(TokenType.Colon, "Expected : after condition.") // eats :
             const body = this.parse_block_stmt();
