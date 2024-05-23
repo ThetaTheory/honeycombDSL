@@ -1,0 +1,6 @@
+[create x=1]
+[if x=1:
+I am ${x}.
+[set x=2]
+[if x=2:
+[loop for x:hoo]]]

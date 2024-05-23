@@ -1,13 +1,13 @@
 import Parser from "./frontend/parser.ts";
-import Environment from "./runtime/enviornment.ts";
+import Environment, { createGlobalEnv } from "./runtime/enviornment.ts";
 import { evaluate } from "./runtime/interpreter.ts";
 
 // Read-Eval-Print
-repl();
+//repl();
 function repl (){
 
     const parser = new Parser();
-    const env = new Environment();
+    const env = createGlobalEnv();
 
     // Input - Parse - Interpret
     console.log("\n Repl v0.1");
@@ -27,7 +27,32 @@ function repl (){
     }
 }
 
+run("./test.txt");
+
+async function run(filename:string) {
+    const parser = new Parser();
+    const env = createGlobalEnv();
+
+    const input = await Deno.readTextFile(filename);
+    const program = parser.produceAST(input);
+    console.log('AST: ', program, '\n')
+
+    const result = evaluate(program, env);
+    console.log('Interpreted: ', result);
+}
+
+/* To Do (on this branch):
+. have temp lit print on html page
+*/
+
 /* To Do:
+. choice-option
+. format
+. scene
+. branch-merge
+. if option
+. choice loop
+. add error handlers for everything
 */
 
 /* Currently
@@ -40,5 +65,5 @@ function repl (){
 . conditional expression fully functional
 . block statement parser (works Inside commands)
 . if statement fully functional
-. for/while loop parser
+. loop for/while statement fully functional
 */

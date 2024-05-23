@@ -60,8 +60,8 @@ const tokens = recursive_tokenizer(src);
 
 // push end of file token
 tokens.push({value: "EndOfFile", type: TokenType.EOF});
-// TEMP TESTER
-console.log('Tokens: ', tokens, '\n');
+// DEBUG: TESTER
+// console.log('Tokens: ', tokens, '\n');
 
 return tokens;
 
@@ -75,7 +75,15 @@ function recursive_tokenizer (src: string[]): Token[]{
   while(src.length > 0){
 
     if (src[0] != '['){
-      tString += src.shift(); // Accumalate template string Token value if not [
+      // Accept double \n. Reject single \n.
+      if (src[0] == '\n' && src[1] == '\n'){
+        tString += src.shift();
+        tString += src.shift();
+      } else if (src[0] == '\n' && src[1] != '\n'){
+        src.shift();
+      } else {
+        tString += src.shift(); // Accumalate template string Token value if not [
+      }
     } else {
       // push accumalated template string
       if (tString.length > 0) {

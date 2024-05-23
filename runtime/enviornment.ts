@@ -1,12 +1,16 @@
 /* Variable Handling and Scope Management */
 import { RuntimeVal, make_bool_var, make_null_var } from "./values.ts";
 
-function setupScope(env: Environment){
+export function createGlobalEnv(){
+    const env = new Environment();
     // declare default variables for global enviornment
     env.declareVar("true", make_bool_var(true), true);
     env.declareVar("false", make_bool_var(false), true);
     env.declareVar("null", make_null_var(), true);
+
+    return env;
 }
+
 
 export default class Environment {
 
@@ -15,13 +19,10 @@ export default class Environment {
     private constants: Set<string>;
 
     constructor (parentENV?: Environment){
-        const global = parentENV? true : false;
+        // const global = parentENV? true : false;
         this.parent = parentENV;
         this.variables = new Map();
         this.constants = new Set();
-        if(global){
-            setupScope(this);
-        }
     }
 
     public declareVar (varname: string, value: RuntimeVal, constant: boolean): RuntimeVal{

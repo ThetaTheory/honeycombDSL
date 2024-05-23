@@ -50,7 +50,7 @@ export function eval_if_stmt (ifStmt: IfStatement, env: Environment): RuntimeVal
 // for statement
 export function eval_for_stmt (forStmt: ForLoop, env: Environment): RuntimeVal{
     let lastEvaluated: RuntimeVal = make_null_var();
-    let times = forStmt.times;
+    const times = forStmt.times;
 
     // error handler for invalid times.
     if (typeof times !== 'number' || times < 0) {
