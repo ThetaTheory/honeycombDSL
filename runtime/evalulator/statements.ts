@@ -1,25 +1,23 @@
 import { CodeBlock, ForLoop, IfStatement, InputCommand, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
-import { displayInputArea, displayOutput } from "../../webpage/script.js";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
 import { BooleanVal, OutputVal, RuntimeVal, make_null_var } from "../values.ts";
 
 // evaluates through program until last evaluated element inside program.
-export async function eval_program (program: Program, env: Environment): Promise<OutputVal> {
+export function eval_program (program: Program, env: Environment): OutputVal {
     const textOutput: string[] = [];    
     for (const statement of program.body){
         if (statement.kind == "InputCommand") {
-            await eval_input_command(statement as InputCommand, env); // pause till input evaluation is resolved
+            eval_input_command(statement as InputCommand, env);
         } else {
             const evalResult = evaluate(statement, env);
             if (evalResult.type == "text"){
-                textOutput.push(evalResult.value as string); // To Do: need to change
-                displayOutput(textOutput.join('')); // update text output display
+            textOutput.push(evalResult.value as string);
             }
         }
     }
 
-    return { value: textOutput, type: "textArray"}; // To Do: Might change return, idk if this is useful.
+    return { value: textOutput, type: "textArray"};
 }
 
 // evaluates variable declaration. if no value, assign null value.
@@ -39,14 +37,16 @@ export function eval_codeblock (codeblock: CodeBlock, env: Environment): Runtime
     return lastEvaluated;  
 }
 
-// display input area -> await input -> evaluate input.
-export function eval_input_command(inputCmd: InputCommand, env: Environment): Promise<void> {
-    return new Promise((resolve) => {
-        displayInputArea(inputCmd, (input: string) => {
-            env.assignVar(inputCmd.identifier, { value: input, type: "string" });
-            resolve();
-        });
-    });
+// input
+export function eval_input_command(inputCmd: InputCommand, env: Environment): void {
+    const userInput = prompt("Enter:");
+    if (userInput !== null) {
+        // assign user input as value to variable
+        env.assignVar(inputCmd.identifier, { value: userInput, type: "string" });
+    } else {
+        // Handle case where user cancels input
+        console.log("Input cancelled.");
+    }
 }
 
 // if statement
