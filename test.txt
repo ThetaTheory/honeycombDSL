@@ -1,9 +1,3 @@
-[create mc]
-[create he]
-What is your name?
-[input mc]
-Your name is ${mc}.
-
-What are your pronouns?
-[input he]
-${he} is ${mc}.
+[create x]
+[input x]
+${x}
