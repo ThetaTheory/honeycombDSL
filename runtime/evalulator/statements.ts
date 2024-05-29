@@ -1,25 +1,38 @@
 import { CodeBlock, ForLoop, IfStatement, InputCommand, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
-import { displayInputArea, displayOutput } from "../../webpage/script.js";
+import { awaitInput, sendTextOutput } from "../../server.ts";
+// import { displayInputArea, displayOutput } from "../../webpage/script.js";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
+import { ValueType } from "../values.ts";
 import { BooleanVal, OutputVal, RuntimeVal, make_null_var } from "../values.ts";
 
+/// RELEVANT TO WEB
 // evaluates through program until last evaluated element inside program.
 export async function eval_program (program: Program, env: Environment): Promise<OutputVal> {
     const textOutput: string[] = [];    
     for (const statement of program.body){
         if (statement.kind == "InputCommand") {
-            await eval_input_command(statement as InputCommand, env); // pause till input evaluation is resolved
+            console.log("Encountered Input node"); // DEBUG
+            sendTextOutput(textOutput.join('')); // send accumalated text to server.ts
+            console.log("Waiting for user input"); // DEBUG
+            const userInput = await awaitInput(); // Wait for user input
+            console.log("Finished waiting for user input"); // DEBUG
+            await eval_input_command(statement as InputCommand, env, userInput); // pause till input evaluation is resolved
+            console.log("Finished waiting for input eval"); // DEBUG
+            textOutput.length = 0; // empty accumalated text
         } else {
             const evalResult = evaluate(statement, env);
             if (evalResult.type == "text"){
-                textOutput.push(evalResult.value as string); // To Do: need to change
-                displayOutput(textOutput.join('')); // update text output display
+                textOutput.push(evalResult.value as string); // accumalates evaluated text
+                console.log("Collected Text: ", evalResult.value); // DEBUG
             }
         }
     }
-
-    return { value: textOutput, type: "textArray"}; // To Do: Might change return, idk if this is useful.
+    // + if EOF and textOutput.length > 0 -> display last text output.
+    if (textOutput.length > 0){
+        sendTextOutput(textOutput.join(''));
+    }
+    return { value: textOutput, type: "textArray"}; // This is just here to make typescript happy.
 }
 
 // evaluates variable declaration. if no value, assign null value.
@@ -39,14 +52,15 @@ export function eval_codeblock (codeblock: CodeBlock, env: Environment): Runtime
     return lastEvaluated;  
 }
 
-// display input area -> await input -> evaluate input.
-export function eval_input_command(inputCmd: InputCommand, env: Environment): Promise<void> {
-    return new Promise((resolve) => {
-        displayInputArea(inputCmd, (input: string) => {
-            env.assignVar(inputCmd.identifier, { value: input, type: "string" });
-            resolve();
-        });
-    });
+// evaluates input.
+export function eval_input_command(inputCmd: InputCommand, env: Environment, inputVal: string|number|boolean) {
+    let inputType: ValueType = "null";
+    if (typeof inputVal == "number" || typeof inputVal == "boolean" || typeof inputVal == "string"){
+        inputType = typeof inputVal as ValueType;
+    } else {
+        console.error("Invalid input"); // To Do: ADD UI HANDLER
+    }
+    return env.assignVar(inputCmd.identifier, {value: inputVal, type: inputType})
 }
 
 // if statement
