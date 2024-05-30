@@ -25,6 +25,7 @@ export async function eval_program (program: Program, env: Environment): Promise
             if (evalResult.type == "text"){
                 textOutput.push(evalResult.value as string); // accumalates evaluated text
                 console.log("Collected Text: ", evalResult.value); // DEBUG
+                console.log("Text Output Array: ", textOutput); // DEBUG
             }
         }
     }

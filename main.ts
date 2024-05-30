@@ -42,7 +42,7 @@
 // }
 
 /* To Do (on this branch):
-. have temp lit print on html page
+. Test reload and unexpected action errors
 */
 
 /* To Do:

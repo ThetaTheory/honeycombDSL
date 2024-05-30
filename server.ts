@@ -10,12 +10,10 @@ const inputForm = `<form action="/" method="post">
     <label for="input">Enter your input:</label><br>
     <input type="text" id="input" name="input"><br>
     <button type="submit">Submit</button>
-  </form>`
+  </form><a href="/"><button>Next</button></a>`
 
-// Starts a server at the default port.
-Deno.serve(handler);
 
-// Starts Interpreting when the server starts.
+// Run DSL Interpreter
 executeProgram(filename).then(result => {
     eof = true;
     console.log("Evaluation completed:", result);
@@ -23,39 +21,45 @@ executeProgram(filename).then(result => {
     console.error("An error occurred:", error);
 });
 
-// The Hanlder function is called for every request that comes in.
-async function handler(req: Request): Promise<Response> {
-    console.log("handler"); // DEBUG
-    // if there's no pending input and not eof, wait for the evaluator to signal
-    if (!pendingInput && !eof) {
-        console.log("line 31: pendingInput: ", pendingInput); // DEBUG
-        await new Promise(resolve => {
-          pendingInput = resolve;
-        });
-    }
-    
-    // runs if user submits input
-    if (req.method === "POST") {
+// Request Handler is called with every request
+async function handler(req: Request){
+    if (req.method == "GET"){
+        console.log("GET"); //DEBUG
+        // if there's no pending input and not eof, wait for the evaluator to signal
+        if (!pendingInput && !eof) {
+            console.log("line 31: pendingInput: ", pendingInput); // DEBUG
+            await new Promise(resolve => {
+            pendingInput = resolve;
+            });
+        }
+
+        // if pending input or eof, return the response with the current state
+        const responseText = `<html><body>
+        <p>${textOutput}</p>
+        ${pendingInput ? inputForm : ""}
+        </body></html>`;
+
+        return new Response(responseText, { headers: { "Content-Type": "text/html" }});
+    } else if (req.method == "POST"){
+        console.log("POST"); //DEBUG
         // Handle user input
         const formData = await req.formData();
         const input = formData.get("input")?.toString() || ""; // To Do: fix to accept boolean and numbers too
 
         if (pendingInput) {
             pendingInput(input); // Resolve the pending input promise
-            pendingInput = null; // Reset pendingInput
+            pendingInput = null; // Reset pendingInput // To Do: Coordination Danger; may cause bug if evaluator encounters input command before this runs.
         }
+
+        // Do not return response
+        return new Response(null, { status: 204 });
+    } else {
+        return new Response("Method not allowed", { status: 405 });
     }
-
-    console.log("line 49: pendingInput: ", pendingInput); // DEBUG
-    
-    // Return the response with the current state
-    const responseText = `<html><body>
-    <p>${textOutput}</p>
-    ${pendingInput ? inputForm : ""}
-    </body></html>`;
-
-    return new Response(responseText, { headers: { "Content-Type": "text/html" }});
 }
+
+// Start a server at localhost: 8000
+Deno.serve(handler);
 
 /* DSL Functions */
 
@@ -80,7 +84,9 @@ async function sourcecodeToAST(filename: string) {
 
 // Assigns text to server.ts variable textOutput from any directory that has the import.
 export function sendTextOutput (text: string){
-textOutput = text;
+    console.log("Type of text: ", typeof text); // DEBUG
+    // replace /n with <br>
+    textOutput = text.replace(/\n/g, "<br>");
 }
 
 export function awaitInput(): Promise<string> {
@@ -88,9 +94,3 @@ export function awaitInput(): Promise<string> {
       pendingInput = resolve;
     });
 }
-
-/* BUG:
-awaitInput(); in statements.ts
-doesn't do anything to trigger the handler
-because there are no requests being made by the client.
-*/

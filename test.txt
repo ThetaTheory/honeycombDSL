@@ -1,5 +1,6 @@
 [create mc]
 [create he]
+[create x=1]
 What is your name?
 [input mc]
 Your name is ${mc}.
@@ -7,3 +8,4 @@ Your name is ${mc}.
 What are your pronouns?
 [input he]
 ${he} is ${mc}.
+[if x=1: John is ${x} years old.]
