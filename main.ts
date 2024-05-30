@@ -42,14 +42,13 @@
 // }
 
 /* To Do (on this branch):
-. Test reload and unexpected action errors
 */
 
 /* To Do:
 . choice-option
-. format
 . scene
 . branch-merge
+. format
 . if option
 . choice loop
 . add error handlers for everything
@@ -67,4 +66,5 @@
 . if statement fully functional
 . loop for/while statement fully functional
 . input command fully functional
+. web integration for text output and input fully functional
 */

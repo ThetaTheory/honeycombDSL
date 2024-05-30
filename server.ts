@@ -27,7 +27,7 @@ async function handler(req: Request){
         console.log("GET"); //DEBUG
         // if there's no pending input and not eof, wait for the evaluator to signal
         if (!pendingInput && !eof) {
-            console.log("line 31: pendingInput: ", pendingInput); // DEBUG
+            console.log("line 30: special pendingInput: ", pendingInput); // DEBUG
             await new Promise(resolve => {
             pendingInput = resolve;
             });
