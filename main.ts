@@ -1,6 +1,6 @@
-// import Parser from "./frontend/parser.ts";
-// import { createGlobalEnv } from "./runtime/enviornment.ts";
-// import { evaluate } from "./runtime/interpreter.ts";
+import Parser from "./frontend/parser.ts";
+import { createGlobalEnv } from "./runtime/enviornment.ts";
+import { evaluate } from "./runtime/interpreter.ts";
 
 // Read-Eval-Print
 //repl();
@@ -27,24 +27,25 @@
 //     }
 // }
 
-// run("./test.txt");
+run("./test.txt");
 
-// async function run(filename:string) {
-//     const parser = new Parser();
-//     const env = createGlobalEnv();
+async function run(filename:string) {
+    const parser = new Parser();
+    const env = createGlobalEnv();
 
-//     const input = await Deno.readTextFile(filename);
-//     const program = parser.produceAST(input);
-//     console.log('AST: ', program, '\n')
+    const input = await Deno.readTextFile(filename);
+    const program = parser.produceAST(input);
+    console.log('AST: ', program, '\n')
 
-//     const result = evaluate(program, env);
-//     console.log('Interpreted: ', result);
-// }
+    const result = evaluate(program, env);
+    console.log('Interpreted: ', result);
+}
 
 /* To Do (on this branch):
 */
 
 /* To Do:
+. have temp lit print on html page
 . choice-option
 . scene
 . branch-merge

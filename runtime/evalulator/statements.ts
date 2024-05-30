@@ -1,6 +1,5 @@
 import { CodeBlock, ForLoop, IfStatement, InputCommand, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
 import { awaitInput, sendTextOutput } from "../../server.ts";
-// import { displayInputArea, displayOutput } from "../../webpage/script.js";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
 import { ValueType } from "../values.ts";
@@ -8,7 +7,7 @@ import { BooleanVal, OutputVal, RuntimeVal, make_null_var } from "../values.ts";
 
 /// RELEVANT TO WEB
 // evaluates through program until last evaluated element inside program.
-export async function eval_program (program: Program, env: Environment): Promise<OutputVal> {
+export async function eval_program (program: Program, env: Environment): Promise<OutputVal>  {
     const textOutput: string[] = [];    
     for (const statement of program.body){
         if (statement.kind == "InputCommand") {
