@@ -1,4 +1,5 @@
 import Parser from "./frontend/parser.ts";
+import Environment from "./runtime/enviornment.ts";
 import { createGlobalEnv } from "./runtime/enviornment.ts";
 import { evaluate } from "./runtime/interpreter.ts";
 
@@ -12,9 +13,11 @@ const inputForm = `<form action="/" method="post">
     <button type="submit">Submit</button>
   </form><a href="/"><button>Next</button></a>`
 
+// Create Single Global Enviornment.
+const env = createGlobalEnv();
 
 // Run DSL Interpreter
-executeProgram(filename).then(result => {
+executeProgram(filename, env).then(result => {
     eof = true;
     console.log("Evaluation completed:", result);
 }).catch(error => {
@@ -64,9 +67,8 @@ Deno.serve(handler);
 /* DSL Functions */
 
 // execution
-async function executeProgram (filename: string) {
+async function executeProgram (filename: string, env: Environment) {
     const program = await sourcecodeToAST(filename);
-    const env = createGlobalEnv();
 
     await evaluate(program, env);
 }

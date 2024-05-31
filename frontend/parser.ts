@@ -1,4 +1,4 @@
-import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement, ForLoop, WhileLoop, InputCommand } from "./ast.ts";
+import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement, ForLoop, WhileLoop, InputCommand, SceneStatement } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -67,6 +67,8 @@ export default class Parser {
                 return this.parse_if_stmt();
             case TokenType.Loop:
                 return this.parse_loop_stmt();
+            case TokenType.Scene:
+                return this.parse_scene_stmt();
             default:
                 return this.parse_stmt(); // !!! To Do: if it was a string it would eat [. Add escape \ command.
         }
@@ -175,6 +177,17 @@ export default class Parser {
             throw new Error("Expected 'for' or 'while' command to follow 'loop'.");
         }
 
+    }
+
+    // [scene scene_name]
+    parse_scene_stmt(): Stmt {
+        this.expect(TokenType.Scene, "Expected 'scene' command."); // eats scene
+        const sceneName = this.expect(TokenType.Identifier, "Expected identifier.").value;
+        this.expect(TokenType.CloseBracket, "Expected ] to end statement."); // eats ]
+        return {
+            kind: "SceneStatement",
+            name: sceneName,
+        } as SceneStatement
     }
 
     /* Expression Parser */

@@ -9,6 +9,7 @@ export type NodeType =
 | "ForLoop"
 | "WhileLoop"
 | "InputCommand"
+| "SceneStatement"
 // Expressions
 | "AssignmentExpr"
 | "BinaryExpr"
@@ -70,6 +71,12 @@ export interface WhileLoop extends Stmt {
 export interface InputCommand extends Stmt {
     kind: "InputCommand";
     identifier: string;
+}
+
+// Scene
+export interface SceneStatement extends Stmt {
+    kind: "SceneStatement";
+    name: string;
 }
 
 /* Expressions */

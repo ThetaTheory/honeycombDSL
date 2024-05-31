@@ -14,6 +14,7 @@ export enum TokenType {
   RelationalOperator, LogicalOperator,
   If, Loop, ForLoop, WhileLoop,
   Input,
+  Scene,
   EOF,
 }
 
@@ -26,6 +27,7 @@ const KEYWORDS: Record<string, TokenType> = {
   while: TokenType.WhileLoop,
   for: TokenType.ForLoop,
   input: TokenType.Input,
+  scene: TokenType.Scene,
 }
 
 // Rule token objects should follow
@@ -153,7 +155,7 @@ function recursive_tokenizer (src: string[]): Token[]{
                   num += src.shift(); // appends until complete number
               }
               tokens.push(token(num, TokenType.Number));
-            } else if (isAlpha(src[0])){
+            } else if (isAlpha(src[0]) || src[0]=="_"){
                 let idn = "";
                 while (src.length > 0 && isAlpha(src[0])){
                   idn += src.shift(); // appends until complete identifier
