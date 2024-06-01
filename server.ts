@@ -4,6 +4,7 @@ import { createGlobalEnv } from "./runtime/enviornment.ts";
 import { evaluate } from "./runtime/interpreter.ts";
 
 let textOutput = '';
+let prevTextOutput = '';
 let pendingInput: ((input: string) => void) | null = null; // input await state
 let eof = false; // end of file state
 const filename = './test.txt'
@@ -38,9 +39,11 @@ async function handler(req: Request){
 
         // if pending input or eof, return the response with the current state
         const responseText = `<html><body>
-        <p>${textOutput}</p>
+        <p>${prevTextOutput}</br></br>${textOutput}</p>
         ${pendingInput ? inputForm : ""}
         </body></html>`;
+
+        prevTextOutput = '';
 
         return new Response(responseText, { headers: { "Content-Type": "text/html" }});
     } else if (req.method == "POST"){
@@ -68,9 +71,24 @@ Deno.serve(handler);
 
 // execution
 async function executeProgram (filename: string, env: Environment) {
-    const program = await sourcecodeToAST(filename);
+    // execute first file, result is the final return of evaluate
+    let result = await sourcecodeToAST(filename).then(
+        program => evaluate(program, env)
+    );
 
-    await evaluate(program, env);
+    // while result is type string (i.e. scene node evaluated), evaluate next scene
+    while (result.type == "string"){
+        // BUG: text output between last input and scene is lost.
+        // Fix attempt:
+        prevTextOutput = textOutput;
+        const new_filename = `${result.value}.txt`
+        console.log("Changing to new file", new_filename); // Debug
+        result = await sourcecodeToAST(new_filename).then(
+            program => evaluate(program, env)
+        );
+    } // To Do: Might be safer to make a separate scene value type.
+
+    console.log("File has reached its final end.");
 }
 
 // reads source code text file, parses and generates AST as program array.
@@ -86,7 +104,6 @@ async function sourcecodeToAST(filename: string) {
 
 // Assigns text to server.ts variable textOutput from any directory that has the import.
 export function sendTextOutput (text: string){
-    console.log("Type of text: ", typeof text); // DEBUG
     // replace /n with <br>
     textOutput = text.replace(/\n/g, "<br>");
 }
@@ -96,3 +113,6 @@ export function awaitInput(): Promise<string> {
       pendingInput = resolve;
     });
 }
+
+// TO DO: Make scene a button. Means prev Text must show between "next" and "scene".
+// Actually means we can remove prev Text and do the same show text and await as input.

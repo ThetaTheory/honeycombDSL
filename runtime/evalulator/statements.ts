@@ -1,38 +1,48 @@
-import { CodeBlock, ForLoop, IfStatement, InputCommand, Program, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
+import { CodeBlock, ForLoop, IfStatement, InputCommand, Program, SceneStatement, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
 import { awaitInput, sendTextOutput } from "../../server.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
 import { ValueType } from "../values.ts";
-import { BooleanVal, OutputVal, RuntimeVal, make_null_var } from "../values.ts";
+import { BooleanVal, OutputVal, RuntimeVal, make_null_var, StringVal } from "../values.ts";
 
 /// RELEVANT TO WEB
 // evaluates through program until last evaluated element inside program.
-export async function eval_program (program: Program, env: Environment): Promise<OutputVal>  {
+export async function eval_program (program: Program, env: Environment): Promise<RuntimeVal>  {
     const textOutput: string[] = [];    
     for (const statement of program.body){
         if (statement.kind == "InputCommand") {
             console.log("Encountered Input node"); // DEBUG
-            sendTextOutput(textOutput.join('')); // send accumalated text to server.ts
+            // send accumalated text to server.ts
+            await sendTextOutput(textOutput.join(''));
             console.log("Waiting for user input"); // DEBUG
-            const userInput = await awaitInput(); // Wait for user input
+            // Wait for user input
+            const userInput = await awaitInput();
             console.log("Finished waiting for user input"); // DEBUG
-            await eval_input_command(statement as InputCommand, env, userInput); // pause till input evaluation is resolved
+            // pause till input evaluation is resolved
+            await eval_input_command(statement as InputCommand, env, userInput);
             console.log("Finished waiting for input eval"); // DEBUG
             textOutput.length = 0; // empty accumalated text
+        } else if (statement.kind == "SceneStatement"){
+            // if encountered [scene] and unsent text left -> display last text output.
+            if (textOutput.length > 0){
+                await sendTextOutput(textOutput.join(''));
+            }
+            const sceneStatement = statement as SceneStatement; // Just here to make TypeScript happy.
+            // exit evaluation cycle and return evaluated scene command
+            return {value: sceneStatement.name, type: "string"} as StringVal;
         } else {
             const evalResult = evaluate(statement, env);
             if (evalResult.type == "text"){
                 textOutput.push(evalResult.value as string); // accumalates evaluated text
-                console.log("Collected Text: ", evalResult.value); // DEBUG
                 console.log("Text Output Array: ", textOutput); // DEBUG
             }
         }
     }
-    // + if EOF and textOutput.length > 0 -> display last text output.
+    // + if EOF and unsent text left -> display last text output.
     if (textOutput.length > 0){
-        sendTextOutput(textOutput.join(''));
+        await sendTextOutput(textOutput.join(''));
     }
-    return { value: textOutput, type: "textArray"}; // This is just here to make typescript happy.
+    return { value: textOutput, type: "textArray"} as OutputVal; // This is just here to make typescript happy.
 }
 
 // evaluates variable declaration. if no value, assign null value.
@@ -47,7 +57,7 @@ export function eval_codeblock (codeblock: CodeBlock, env: Environment): Runtime
     
     for (const statement of codeblock.body){
         lastEvaluated = evaluate(statement, env);
-    }
+    } // To Do: Needs to support [input var] and [scene name]
 
     return lastEvaluated;  
 }

@@ -39,6 +39,7 @@ export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
             return eval_while_stmt(astNode as WhileLoop, env);
         case "Program":
             return eval_program(astNode as Program, env);
+            // To Do: TypeScript isn't happy that this function is async. Runs fine though.
         default:
             console.error("Interpreter not yet implemented.", astNode);
             Deno.exit(0);

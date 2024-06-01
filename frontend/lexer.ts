@@ -157,7 +157,7 @@ function recursive_tokenizer (src: string[]): Token[]{
               tokens.push(token(num, TokenType.Number));
             } else if (isAlpha(src[0]) || src[0]=="_"){
                 let idn = "";
-                while (src.length > 0 && isAlpha(src[0])){
+                while (src.length > 0 && (isAlpha(src[0]) || src[0] == "_")){
                   idn += src.shift(); // appends until complete identifier
                 }
                 // Check if reserved keyword
