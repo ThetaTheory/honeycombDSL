@@ -7,12 +7,14 @@ let textOutput = '';
 let prevTextOutput = '';
 let pendingInput: ((input: string) => void) | null = null; // input await state
 let eof = false; // end of file state
+let eos = false; // end of scene state
 const filename = './test.txt'
 const inputForm = `<form action="/" method="post">
     <label for="input">Enter your input:</label><br>
     <input type="text" id="input" name="input"><br>
     <button type="submit">Submit</button>
   </form><a href="/"><button>Next</button></a>`
+const sceneButton = `<a href="/"><button>Next</button></a>` // To Do: Edit to change display with scene title.
 
 // Create Single Global Enviornment.
 const env = createGlobalEnv();
@@ -29,6 +31,7 @@ executeProgram(filename, env).then(result => {
 async function handler(req: Request){
     if (req.method == "GET"){
         console.log("GET"); //DEBUG
+        console.log("eos state:", eos); //DEBUG
         // if there's no pending input and not eof, wait for the evaluator to signal
         if (!pendingInput && !eof) {
             console.log("line 30: special pendingInput: ", pendingInput); // DEBUG
@@ -37,13 +40,19 @@ async function handler(req: Request){
             });
         }
 
-        // if pending input or eof, return the response with the current state
-        const responseText = `<html><body>
-        <p>${prevTextOutput}</br></br>${textOutput}</p>
-        ${pendingInput ? inputForm : ""}
-        </body></html>`;
-
-        prevTextOutput = '';
+        let responseText = '';
+        if (eos){
+            responseText = `<html><body>
+            <p>${prevTextOutput}</p></br>${sceneButton}
+            </body></html>`
+            prevTextOutput = '';
+            eos = false;
+        } else {
+            responseText = `<html><body>
+            <p>${textOutput}</p>
+            ${pendingInput ? inputForm : ""}
+            </body></html>`
+        }
 
         return new Response(responseText, { headers: { "Content-Type": "text/html" }});
     } else if (req.method == "POST"){
@@ -78,8 +87,9 @@ async function executeProgram (filename: string, env: Environment) {
 
     // while result is type string (i.e. scene node evaluated), evaluate next scene
     while (result.type == "string"){
+        eos = true;
         // BUG: text output between last input and scene is lost.
-        // Fix attempt:
+        // Fixed:
         prevTextOutput = textOutput;
         const new_filename = `${result.value}.txt`
         console.log("Changing to new file", new_filename); // Debug
