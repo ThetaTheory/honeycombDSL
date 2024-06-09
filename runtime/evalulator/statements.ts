@@ -1,5 +1,5 @@
-import { CodeBlock, ForLoop, IfStatement, InputCommand, Program, SceneStatement, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
-import { awaitInput, sendTextOutput } from "../../server.ts";
+import { CodeBlock, ForLoop, IfStatement, InputCommand, LeafStatement, Program, SceneStatement, VarDeclaration, WhileLoop } from "../../frontend/ast.ts";
+import { awaitInput, sendTextOutput, executeLeaf } from "../../server.ts";
 import Environment from "../enviornment.ts";
 import { evaluate } from "../interpreter.ts";
 import { ValueType } from "../values.ts";
@@ -30,6 +30,11 @@ export async function eval_program (program: Program, env: Environment): Promise
             const sceneStatement = statement as SceneStatement; // Just here to make TypeScript happy.
             // exit evaluation cycle and return evaluated scene command
             return {value: sceneStatement.name, type: "string"} as StringVal;
+        } else if (statement.kind == "LeafStatement"){
+            await sendTextOutput(textOutput.join(''));
+            console.log("Encountered Leaf Node"); // Debug
+            await executeLeaf(statement as LeafStatement, env);
+            textOutput.length = 0; // empty accumalated text
         } else {
             const evalResult = evaluate(statement, env);
             if (evalResult.type == "text"){
@@ -62,7 +67,7 @@ export function eval_codeblock (codeblock: CodeBlock, env: Environment): Runtime
     return lastEvaluated;  
 }
 
-// evaluates input.
+// evaluates input
 export function eval_input_command(inputCmd: InputCommand, env: Environment, inputVal: string|number|boolean) {
     let inputType: ValueType = "null";
     if (typeof inputVal == "number" || typeof inputVal == "boolean" || typeof inputVal == "string"){
@@ -82,7 +87,7 @@ export function eval_if_stmt (ifStmt: IfStatement, env: Environment): RuntimeVal
         throw new Error("Condition of if statement must evaluate to a boolean");
     }
     // if true, send consequent to evaluate and return result
-    if (condition){
+    if (condition.value){
         return evaluate(ifStmt.consequent, env);
     } else {
         return make_null_var();

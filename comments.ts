@@ -1,11 +1,11 @@
 /* To Do (on this branch):
-. change scene functionality to button
+. branch and merge command
 */
 
 /* To Do:
+. fix loops (i.e. eval codeblock)
 . have temp lit print on html page
 . choice-option
-. scene
 . branch-merge
 . format
 . if option
@@ -26,4 +26,6 @@
 . loop for/while statement fully functional
 . input command fully functional
 . web integration for text output and input fully functional
+. scene command fully functional
+. leaf command fully functional
 */

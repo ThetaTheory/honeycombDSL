@@ -63,7 +63,9 @@ export function eval_binary_expr (binop: BinaryExpr, env: Environment): RuntimeV
         return eval_logical_binary_expr(leftSide as BooleanVal, rightSide as BooleanVal, binop.operator);
     } else if(binop.operator == "=" || binop.operator == "!=" || binop.operator == ">" || binop.operator == ">=" || binop.operator == "<" || binop.operator == "<="){
         return eval_comparative_binary_expr(leftSide as RuntimeVal, rightSide as RuntimeVal, binop.operator);
-    } else { return make_null_var(); } // To Do: !!! add string concactenation cases.
+    } else {
+        return make_null_var();
+    } // To Do: !!! add string concactenation cases.
 }
 
 // Look up variable with identifier name in relevant enviornments

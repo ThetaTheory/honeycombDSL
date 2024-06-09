@@ -1,7 +1,0 @@
-Yay a new scene containing ${mc}!
-
-How do you feel?
-[create emo]
-[input emo]
-You feel ${emo}!
-[scene test_three]

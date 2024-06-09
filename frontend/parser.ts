@@ -1,4 +1,4 @@
-import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement, ForLoop, WhileLoop, InputCommand, SceneStatement } from "./ast.ts";
+import { Stmt, Program, CodeBlock, Expr, BinaryExpr, NumericLiteral, Identifier, VarDeclaration, AssignmentExpr, TemplateLiteral, StringLiteral, IfStatement, ForLoop, WhileLoop, InputCommand, SceneStatement, LeafStatement } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -67,6 +67,8 @@ export default class Parser {
                 return this.parse_if_stmt();
             case TokenType.Loop:
                 return this.parse_loop_stmt();
+            case TokenType.Leaf:
+                return this.parse_leaf_stmt();
             case TokenType.Scene:
                 return this.parse_scene_stmt();
             default:
@@ -91,17 +93,17 @@ export default class Parser {
     // [create idnt] // [create idnt = expr]
     private parse_var_declaration(): Stmt {
         this.expect(TokenType.Create, "Expected Token Type Create."); // eats create
-        const identifier = this.expect(TokenType.Identifier, "Expected identifier following 'create:' keyword.").value; // eats idnt
+        const identifier = this.expect(TokenType.Identifier, "Expected identifier following 'create' keyword.").value; // eats idnt
         let declaration;
         if(this.at().type == TokenType.CloseBracket){
-            // case; create: idnt]
+            // case; create idnt]
             declaration =  {
                 kind: "VarDeclaration",
                 constant: false,
                 identifier
             } as VarDeclaration;
         } else {
-            // case; create: idnt = expr]
+            // case; create idnt = expr]
             this.expect(TokenType.Equals, "Expected '=' or ']' following identifier.") // eats =
             declaration = {
                 kind: "VarDeclaration",
@@ -177,6 +179,17 @@ export default class Parser {
             throw new Error("Expected 'for' or 'while' command to follow 'loop'.");
         }
 
+    }
+
+    // [leaf leaf_name]
+    parse_leaf_stmt(): Stmt {
+        this.expect(TokenType.Leaf, "Expected 'leaf' command."); // eats leaf
+        const leafName = this.expect(TokenType.Identifier, "Expected identifier.").value;
+        this.expect(TokenType.CloseBracket, "Expected ] to end statement."); // eats ]
+        return {
+            kind: "LeafStatement",
+            name: leafName,
+        } as LeafStatement
     }
 
     // [scene scene_name]

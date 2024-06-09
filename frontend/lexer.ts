@@ -14,7 +14,7 @@ export enum TokenType {
   RelationalOperator, LogicalOperator,
   If, Loop, ForLoop, WhileLoop,
   Input,
-  Scene,
+  Scene, Leaf,
   EOF,
 }
 
@@ -28,6 +28,7 @@ const KEYWORDS: Record<string, TokenType> = {
   for: TokenType.ForLoop,
   input: TokenType.Input,
   scene: TokenType.Scene,
+  leaf: TokenType.Leaf,
 }
 
 // Rule token objects should follow

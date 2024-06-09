@@ -1,27 +1,30 @@
+import { LeafStatement } from "./frontend/ast.ts";
 import Parser from "./frontend/parser.ts";
 import Environment from "./runtime/enviornment.ts";
 import { createGlobalEnv } from "./runtime/enviornment.ts";
 import { evaluate } from "./runtime/interpreter.ts";
 
+let currentScene = '';
 let textOutput = '';
 let prevTextOutput = '';
 let pendingInput: ((input: string) => void) | null = null; // input await state
-let eof = false; // end of file state
+let clickNextScene: (() => void) | null = null; // next scene await state
 let eos = false; // end of scene state
-const filename = './test.txt'
+let eol = true; // end of leaf state
+let lpp = false; // leaf pending print state
+const firstscene = 'chapterone'
 const inputForm = `<form action="/" method="post">
     <label for="input">Enter your input:</label><br>
     <input type="text" id="input" name="input"><br>
     <button type="submit">Submit</button>
   </form><a href="/"><button>Next</button></a>`
-const sceneButton = `<a href="/"><button>Next</button></a>` // To Do: Edit to change display with scene title.
+const sceneButton = `<a href="/"><button>Next Scene</button></a>` // To Do: Edit to change display with scene title.
 
 // Create Single Global Enviornment.
 const env = createGlobalEnv();
 
 // Run DSL Interpreter
-executeProgram(filename, env).then(result => {
-    eof = true;
+executeProgram(firstscene, env).then(result => {
     console.log("Evaluation completed:", result);
 }).catch(error => {
     console.error("An error occurred:", error);
@@ -31,22 +34,29 @@ executeProgram(filename, env).then(result => {
 async function handler(req: Request){
     if (req.method == "GET"){
         console.log("GET"); //DEBUG
-        console.log("eos state:", eos); //DEBUG
-        // if there's no pending input and not eof, wait for the evaluator to signal
-        if (!pendingInput && !eof) {
-            console.log("line 30: special pendingInput: ", pendingInput); // DEBUG
-            await new Promise(resolve => {
-            pendingInput = resolve;
-            });
-        }
-
+        console.log("GET) eos state:", eos); //DEBUG
+        console.log("GET) leaf print pending:", lpp); //DEBUG
+        console.log("GET) prev text:", prevTextOutput); //DEBUG
+        console.log("GET) current text:", textOutput); //DEBUG
         let responseText = '';
-        if (eos){
+        if (eos){ // Wrap up everything in scene file before moving on to next scene.
             responseText = `<html><body>
             <p>${prevTextOutput}</p></br>${sceneButton}
             </body></html>`
             prevTextOutput = '';
             eos = false;
+            lpp = false;
+            if (clickNextScene){
+                clickNextScene();
+                clickNextScene = null;
+            }
+        } else if (lpp){
+            responseText = `<html><body>
+            <p>${prevTextOutput}</p><p>${textOutput}</p>
+            ${pendingInput ? inputForm : ""}
+            </body></html>`
+            prevTextOutput = '';
+            if (eol) {lpp = false;} // if end of leaf, leaf no longer pending print.
         } else {
             responseText = `<html><body>
             <p>${textOutput}</p>
@@ -80,7 +90,11 @@ Deno.serve(handler);
 
 // execution
 async function executeProgram (filename: string, env: Environment) {
+    currentScene = filename;
+    // build directory
+    filename = `./source/${currentScene}/${currentScene}.txt`
     // execute first file, result is the final return of evaluate
+    console.log(`Executing scene: ${currentScene}`); // Debug
     let result = await sourcecodeToAST(filename).then(
         program => evaluate(program, env)
     );
@@ -88,17 +102,43 @@ async function executeProgram (filename: string, env: Environment) {
     // while result is type string (i.e. scene node evaluated), evaluate next scene
     while (result.type == "string"){
         eos = true;
-        // BUG: text output between last input and scene is lost.
-        // Fixed:
-        prevTextOutput = textOutput;
-        const new_filename = `${result.value}.txt`
-        console.log("Changing to new file", new_filename); // Debug
-        result = await sourcecodeToAST(new_filename).then(
+        console.log("End of scene."); // Debug
+        console.log("eos state:", eos); //Debug
+        // save previous scene's last text output
+        prevTextOutput += textOutput;
+        // update directory with new scene name
+        currentScene = `${result.value}`;
+        filename = `./source/${currentScene}/${currentScene}.txt`
+        // wait for previous scene's remaining text to display
+        console.log("Waiting for scene display to complete.") // Debug
+        await awaitScene();
+        // load scene on click
+        console.log(`Executing scene: ${currentScene}`); // Debug
+        result = await sourcecodeToAST(filename).then(
             program => evaluate(program, env)
         );
-    } // To Do: Might be safer to make a separate scene value type.
+    }
 
     console.log("File has reached its final end.");
+}
+
+export async function executeLeaf (leaf: LeafStatement, env: Environment){
+    lpp = true; // leaf pending print
+    eol = false; // not end of leaf
+    // add scene's last text output
+    prevTextOutput += textOutput;
+    let leafname = leaf.name;
+    leafname = `./source/${currentScene}/leaf/${leafname}.txt`;
+    console.log(`Executing leaf ${leafname} in scene ${currentScene}`); // Debug
+    const result = await sourcecodeToAST(leafname).then(
+        program => evaluate(program, env)
+    );
+    eol = true; // end of leaf
+    // add leaf's last text output
+    prevTextOutput += textOutput;
+    console.log("Leaf) Execution complete", result.value); // Debug
+    console.log("Leaf) Current global text output;", textOutput); // Debug
+    console.log("Leaf) Current prev text output;", prevTextOutput); // Debug
 }
 
 // reads source code text file, parses and generates AST as program array.
@@ -121,6 +161,12 @@ export function sendTextOutput (text: string){
 export function awaitInput(): Promise<string> {
     return new Promise((resolve) => {
       pendingInput = resolve;
+    });
+}
+
+function awaitScene(): Promise<void> {
+    return new Promise((resolve) => {
+        clickNextScene = resolve;
     });
 }
 
