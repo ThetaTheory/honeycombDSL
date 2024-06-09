@@ -169,6 +169,3 @@ function awaitScene(): Promise<void> {
         clickNextScene = resolve;
     });
 }
-
-// TO DO: Make scene a button. Means prev Text must show between "next" and "scene".
-// Actually means we can remove prev Text and do the same show text and await as input.
