@@ -1,7 +1,8 @@
-import { LeafStatement } from "./frontend/ast.ts";
+import { CodeBlock, LeafStatement } from "./frontend/ast.ts";
 import Parser from "./frontend/parser.ts";
 import Environment from "./runtime/enviornment.ts";
 import { createGlobalEnv } from "./runtime/enviornment.ts";
+import { eval_program } from "./runtime/evalulator/statements.ts";
 import { evaluate } from "./runtime/interpreter.ts";
 
 let currentScene = '';
@@ -130,15 +131,32 @@ export async function executeLeaf (leaf: LeafStatement, env: Environment){
     let leafname = leaf.name;
     leafname = `./source/${currentScene}/leaf/${leafname}.txt`;
     console.log(`Executing leaf ${leafname} in scene ${currentScene}`); // Debug
-    const result = await sourcecodeToAST(leafname).then(
+    await sourcecodeToAST(leafname).then(
         program => evaluate(program, env)
     );
     eol = true; // end of leaf
     // add leaf's last text output
     prevTextOutput += textOutput;
-    console.log("Leaf) Execution complete", result.value); // Debug
+    // Debugs
+    console.log("Leaf) Execution complete"); // Debug
     console.log("Leaf) Current global text output;", textOutput); // Debug
     console.log("Leaf) Current prev text output;", prevTextOutput); // Debug
+}
+
+export async function executeCodeBlock(codeBlock:CodeBlock, env: Environment) {
+    // Codeblock works the same way Leaf does, so it borrows the status variables.
+    lpp = true;
+    eol = false;
+    // add scene's last text output
+    prevTextOutput += textOutput;
+    await eval_program(codeBlock, env);
+    eol = true;
+    // add codeblock's last text output
+    prevTextOutput += textOutput;
+    // Debugs
+    console.log("CodeBlock) Execution complete"); // Debug
+    console.log("CodeBlock) Current global text output;", textOutput); // Debug
+    console.log("CodeBlock) Current prev text output;", prevTextOutput); // Debug
 }
 
 // reads source code text file, parses and generates AST as program array.

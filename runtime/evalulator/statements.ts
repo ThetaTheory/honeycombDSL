@@ -7,7 +7,7 @@ import { BooleanVal, OutputVal, RuntimeVal, make_null_var, StringVal } from "../
 
 /// RELEVANT TO WEB
 // evaluates through program until last evaluated element inside program.
-export async function eval_program (program: Program, env: Environment): Promise<RuntimeVal>  {
+export async function eval_program (program: Program | CodeBlock, env: Environment): Promise<RuntimeVal>  {
     const textOutput: string[] = [];    
     for (const statement of program.body){
         if (statement.kind == "InputCommand") {
