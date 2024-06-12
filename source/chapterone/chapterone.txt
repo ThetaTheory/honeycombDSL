@@ -1,8 +1,13 @@
 Chapter One.
 
-Testing Leaf.
-[leaf cake] but 
-[leaf pie]
+Testing Leaf. [leaf leaftest]
+
+Testing If.
+[create ifone = 1]
+[if ifone = 1: [leaf iftest]]
+
+Testing For.
+[loop for 3: hello.]
 
 Beginning Chapter Two.
 [scene chaptertwo]

@@ -10,8 +10,6 @@ let prevTextOutput = '';
 let pendingInput: ((input: string) => void) | null = null; // input await state
 let clickNextScene: (() => void) | null = null; // next scene await state
 let eos = false; // end of scene state
-let eol = true; // end of leaf state
-let lpp = false; // leaf pending print state
 const firstscene = 'chapterone'
 const inputForm = `<form action="/" method="post">
     <label for="input">Enter your input:</label><br>
@@ -35,9 +33,6 @@ async function handler(req: Request){
     if (req.method == "GET"){
         console.log("GET"); //DEBUG
         console.log("GET) eos state:", eos); //DEBUG
-        console.log("GET) leaf print pending:", lpp); //DEBUG
-        console.log("GET) prev text:", prevTextOutput); //DEBUG
-        console.log("GET) current text:", textOutput); //DEBUG
         let responseText = '';
         if (eos){ // Wrap up everything in scene file before moving on to next scene.
             responseText = `<html><body>
@@ -45,18 +40,10 @@ async function handler(req: Request){
             </body></html>`
             prevTextOutput = '';
             eos = false;
-            lpp = false;
             if (clickNextScene){
                 clickNextScene();
                 clickNextScene = null;
             }
-        } else if (lpp){
-            responseText = `<html><body>
-            <p>${prevTextOutput}</p><p>${textOutput}</p>
-            ${pendingInput ? inputForm : ""}
-            </body></html>`
-            prevTextOutput = '';
-            if (eol) {lpp = false;} // if end of leaf, leaf no longer pending print.
         } else {
             responseText = `<html><body>
             <p>${textOutput}</p>
@@ -122,23 +109,11 @@ async function executeProgram (filename: string, env: Environment) {
     console.log("File has reached its final end.");
 }
 
-export async function executeLeaf (leaf: LeafStatement, env: Environment){
-    lpp = true; // leaf pending print
-    eol = false; // not end of leaf
-    // add scene's last text output
-    prevTextOutput += textOutput;
-    let leafname = leaf.name;
-    leafname = `./source/${currentScene}/leaf/${leafname}.txt`;
-    console.log(`Executing leaf ${leafname} in scene ${currentScene}`); // Debug
-    const result = await sourcecodeToAST(leafname).then(
-        program => evaluate(program, env)
-    );
-    eol = true; // end of leaf
-    // add leaf's last text output
-    prevTextOutput += textOutput;
-    console.log("Leaf) Execution complete", result.value); // Debug
-    console.log("Leaf) Current global text output;", textOutput); // Debug
-    console.log("Leaf) Current prev text output;", prevTextOutput); // Debug
+export async function parseLeaf (leaf: LeafStatement){
+    const leafname = `./source/${currentScene}/leaf/${leaf.name}.txt`;
+    console.log(`Parsing leaf ${leafname} in scene ${currentScene}`); // Debug
+    const result = await sourcecodeToAST(leafname);
+    return result
 }
 
 // reads source code text file, parses and generates AST as program array.
