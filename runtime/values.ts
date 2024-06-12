@@ -1,7 +1,9 @@
-export type ValueType = "null" | "number" | "boolean" | "string" | "text" | "textArray";
+import { Stmt } from "../frontend/ast.ts";
+
+export type ValueType = "null" | "number" | "boolean" | "string" | "text" | "nodeArray";
 
 export interface RuntimeVal {
-    value?: null | number | boolean | string | string[];
+    value?: null | number | boolean | string | string[] | Stmt[];
     type: ValueType;
 }
 
@@ -30,9 +32,9 @@ export interface TextVal extends RuntimeVal {
     type: "text";
 }
 
-export interface OutputVal extends RuntimeVal {
-    value: string[];
-    type: "textArray";
+export interface CodeBlockVal extends RuntimeVal {
+    value: Stmt[];
+    type: "nodeArray";
 }
 
 // Make Variable functions to simplify code
